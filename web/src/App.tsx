@@ -273,22 +273,6 @@ export default function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             App Info
           </button>
-          <div className="badge">
-            <span className="status-dot active"></span>
-            MCP Ready
-          </div>
-          <div className="badge" title={healthStatus.model || 'OpenRouter model'}>
-            <span className={`status-dot ${healthStatus.openRouter ? 'active' : 'inactive'}`}></span>
-            Gemma: {healthStatus.openRouter ? 'Live' : 'Fallback'}
-          </div>
-          <div className="badge">
-            <span className={`status-dot ${healthStatus.keySet ? 'active' : 'inactive'}`}></span>
-            Gemini OCR: {healthStatus.keySet ? 'Live' : 'Fallback'}
-          </div>
-          <div className="badge">
-            <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
-            ADK: {healthStatus.adk ? 'Active' : 'Standby'}
-          </div>
         </div>
       </header>
 
@@ -661,6 +645,29 @@ export default function App() {
         </div>
       )}
 
+      <footer style={{ marginTop: '4rem', padding: '2rem 1rem 3rem 1rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div className="badge">
+            <span className="status-dot active"></span>
+            MCP Ready
+          </div>
+          <div className="badge" title={healthStatus.model || 'OpenRouter model'}>
+            <span className={`status-dot ${healthStatus.openRouter ? 'active' : 'inactive'}`}></span>
+            Gemma: {healthStatus.openRouter ? 'Live' : 'Fallback'}
+          </div>
+          <div className="badge">
+            <span className={`status-dot ${healthStatus.keySet ? 'active' : 'inactive'}`}></span>
+            Gemini OCR: {healthStatus.keySet ? 'Live' : 'Fallback'}
+          </div>
+          <div className="badge">
+            <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
+            ADK: {healthStatus.adk ? 'Active' : 'Standby'}
+          </div>
+        </div>
+        <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
+          Built by <a href="https://pixek.xyz" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-secondary)', textDecoration: 'none', fontWeight: 700, textShadow: '0 0 10px rgba(139, 92, 246, 0.4)' }}>pixek.xyz</a>
+        </div>
+      </footer>
     </div>
   );
 }
