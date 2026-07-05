@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trustlens-agent"
+version = "1.0.0"
+description = "ADK-powered phishing investigation agent with MCP, FastAPI, CLI, and React UI."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "google-adk",
+  "fastapi",
+  "uvicorn",
+  "pydantic",
+  "python-dotenv",
+  "mcp",
+]
+
+[project.scripts]
+trustlens = "trustlens_agent.cli:main"
+trustlens-mcp = "trustlens_agent.mcp_server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

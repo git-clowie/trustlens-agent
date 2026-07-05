@@ -66,7 +66,7 @@ Open `http://127.0.0.1:8000` in your browser and capture these **three** screens
     > "Using this screenshot as the initial frame: Make the green checkmarks pulse with light, and the text lines scroll upwards slightly. Add subtle digital glitch effects on the borders, resembling an active server console tracing files in a database."
 
 ### Scene 3: The Threat Score & Action Plan (Chorus 2 / Outro)
-*   **How to capture:** Let the analysis finish and scroll down to capture the threat score circular gauge (e.g., 95/100) and the Contextual Action Plan. Save it as `screenshot_report.png`.
+*   **How to capture:** Let the analysis finish and scroll down to capture the threat score circular gauge (e.g., 100/100) and the Contextual Action Plan. Save it as `screenshot_report.png`.
 *   **AI Video Generator Prompt (Image-to-Video):**
     > "Using this screenshot as the initial frame: Make the circular threat gauge glow and rotate slowly. Apply a clean 3D depth effect so the text blocks seem to float slightly in front of the dark mesh background. High-tech presentation style."
 

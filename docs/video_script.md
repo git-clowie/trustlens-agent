@@ -17,15 +17,15 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 *   **Visual on screen:** Open the browser on `http://127.0.0.1:8000`. Show the premium dark landing page with the glowing TrustLens title, MCP Ready badge, and the unified Omnibox.
 *   **Action:** Hover your cursor over the "App Info" button to show the professional modal, then close it.
 *   **Voiceover (Read this):**
-    > "Hello, my name is [Your Name], and this is TrustLens: an AI Security Concierge built on Google's Agentic Development Kit and the Model Context Protocol. TrustLens protects users in the critical seconds before they click a malicious link. Let's look at how it works."
+    > "Hello, my name is [Your Name], and this is TrustLens: an AI Security Concierge built on Google's Agent Development Kit and the Model Context Protocol. TrustLens protects users in the critical seconds before they click a malicious link. Let's look at how it works."
 
 ---
 
 ### Scene 2: Text Verification Demo & Auto-Scan (0:25 - 1:00)
 *   **Visual on screen:** Click the **"DHL SMS"** quick sample button. Watch the console automatically fill, trigger the investigation timeline, and run the real-time agent trace animation.
-*   **Action:** Scroll down slowly to show the threat score (95/100), the PII redacted preview, the detected indicators, and the action plan.
+*   **Action:** Scroll down slowly to show the threat score (100/100), the PII redacted preview, the detected indicators, and the action plan.
 *   **Voiceover (Read this):**
-    > "With our one-click auto-scan, a user simply selects or pastes a message. Here, the agent triggers a multi-step investigation pipeline. It runs local PII redaction, performs zero-trust offline domain pattern matching, and rates the threat. In this case, we have a high-risk score of 95 out of 100 because of impersonated DHL branding and artificial urgency."
+    > "With our one-click auto-scan, a user simply selects or pastes a message. Here, the agent triggers a multi-step investigation pipeline. It runs local PII redaction, performs zero-trust offline domain pattern matching, and rates the threat. In this case, we have a high-risk score of 100 out of 100 because of impersonated DHL branding, a suspicious top-level domain, and artificial urgency."
 
 ---
 
@@ -46,14 +46,14 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 ---
 
 ### Scene 5: MCP & Technical Architecture (2:15 - 2:45)
-*   **Visual on screen:** Bring up your terminal showing `python -m trustlens_agent.cli scan --sample bank` or the code structure in your IDE.
+*   **Visual on screen:** Bring up your terminal showing `trustlens scan --sample bank` or the code structure in your IDE.
 *   **Action:** Show the `mcp_server.py` code briefly.
 *   **Voiceover (Read this):**
-    > "Under the hood, TrustLens is engineered with the Google Agentic Development Kit to orchestrate tools. It also exposes its security scanner as a Model Context Protocol (MCP) server. This lets developers mount TrustLens directly inside AI-powered coding environments like Cursor or Claude Desktop to inspect codebases and inputs dynamically."
+    > "Under the hood, TrustLens is engineered with the Google Agent Development Kit to orchestrate tools. It also exposes its security scanner as a Model Context Protocol (MCP) server. This lets developers mount TrustLens directly inside AI-powered coding environments like Cursor or Claude Desktop to inspect suspicious inputs dynamically."
 
 ---
 
 ### Scene 6: Outro (2:45 - 3:00)
 *   **Visual on screen:** Go back to the premium dashboard web page.
 *   **Voiceover (Read this):**
-    > "TrustLens bridges the gap between threat intelligence and human action, keeping users safe in real time. Thank you for watching."
+    > "TrustLens bridges the gap between threat analysis and human action, keeping users safe in real time. Thank you for watching."

@@ -52,12 +52,12 @@ This document contains a slide-by-slide outline, visual guidelines, and speaker 
 ## Slide 5: System Architecture & Technologies
 *   **Visual Suggestion:** A diagram or table listing the Core Capstone Integrations.
 *   **Bullet Points:**
-    *   **Agent Framework:** Built using the **Google Agentic Development Kit (ADK)**.
+    *   **Agent Framework:** Built using the **Google Agent Development Kit (ADK)**.
     *   **Model Context Protocol (MCP):** Exposes analysis tools via an MCP Server.
     *   **Multimodal AI:** Powered by **Gemini Pro & Vision** for text and screenshot OCR.
     *   **Backend & Frontend:** FastAPI (Python) + React (TypeScript/Vite) wrapped in a Dockerized environment.
 *   **Speaker Notes:**
-    > "Technically, the project is structured as a code-first orchestrator built on the Google Agentic Development Kit. It wraps the entire security pipeline into modular tools. Furthermore, it implements the Model Context Protocol (MCP) server, allowing developers to plug TrustLens directly into AI-assisted developer IDEs like Cursor or Claude Desktop to secure code-generation environments."
+    > "Technically, the project is structured as a code-first orchestrator built on the Google Agent Development Kit. It wraps the entire security pipeline into modular tools. Furthermore, it implements the Model Context Protocol (MCP) server, allowing developers to plug TrustLens directly into AI-assisted environments like Cursor or Claude Desktop to inspect suspicious inputs."
 
 ---
 

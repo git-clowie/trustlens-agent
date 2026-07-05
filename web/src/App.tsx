@@ -41,6 +41,27 @@ interface DomainReport {
   detected_brands: string[];
 }
 
+interface AiEvidence {
+  signal: string;
+  why_it_matters: string;
+  severity: string;
+}
+
+interface AiAnalysis {
+  provider: string;
+  model: string;
+  fallback_used: boolean;
+  status: string;
+  executive_summary: string;
+  user_explanation: string;
+  recommended_priority: string;
+  evidence: AiEvidence[];
+  questions: string[];
+  next_actions: string[];
+  confidence_note: string;
+  fallback_reason?: string;
+}
+
 interface InvestigationReport {
   redacted_text: string;
   links: Array<{ original: string; domain: string }>;
@@ -51,6 +72,7 @@ interface InvestigationReport {
   confidence: number;
   breakdown: string[];
   safe_steps: string[];
+  ai_analysis: AiAnalysis;
   report_draft: string;
   trace: TraceStep[];
   adk_framework_loaded: boolean;
@@ -60,11 +82,12 @@ interface InvestigationReport {
 export default function App() {
   const [inputText, setInputText] = useState('');
   const [situation, setSituation] = useState('before_click');
+  const [reportSituation, setReportSituation] = useState('before_click');
   const [loading, setLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [report, setReport] = useState<InvestigationReport | null>(null);
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
-  const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false });
+  const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false, openRouter: false, model: '' });
   const [copySuccess, setCopySuccess] = useState(false);
   const [imageFile, setImageFile] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
@@ -76,7 +99,9 @@ export default function App() {
       .then((data) => {
         setHealthStatus({
           adk: data.adk_available,
-          keySet: data.api_key_set
+          keySet: data.api_key_set,
+          openRouter: data.openrouter_key_set,
+          model: data.openrouter_model || 'google/gemma-4-31b-it:free'
         });
       })
       .catch(() => {
@@ -92,7 +117,7 @@ export default function App() {
     setMimeType(null);
     setReport(null);
     setActiveTrace([]);
-    handleInvestigate(sample.text, null, null);
+    handleInvestigate(sample.text, null, null, sample.situation);
   };
 
   const selectImageSample = (type: 'bank' | 'courier') => {
@@ -106,7 +131,7 @@ export default function App() {
     setSituation('before_click');
     setReport(null);
     setActiveTrace([]);
-    handleInvestigate('', mockBase64, 'image/png');
+    handleInvestigate('', mockBase64, 'image/png', 'before_click');
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -136,15 +161,22 @@ export default function App() {
     setInputText('');
   };
 
-  const handleInvestigate = async (overrideText?: string, overrideImage?: string | null, overrideMime?: string | null) => {
+  const handleInvestigate = async (
+    overrideText?: string,
+    overrideImage?: string | null,
+    overrideMime?: string | null,
+    overrideSituation?: string
+  ) => {
     const textToScan = overrideText !== undefined ? overrideText : inputText;
     const imageToScan = overrideImage !== undefined ? overrideImage : imageFile;
     const mimeToScan = overrideMime !== undefined ? overrideMime : mimeType;
+    const situationToScan = overrideSituation !== undefined ? overrideSituation : situation;
 
     if (!textToScan.trim() && !imageToScan) return;
 
     setLoading(true);
     setReport(null);
+    setReportSituation(situationToScan);
     setCopySuccess(false);
 
     // Initialize visual trace
@@ -161,6 +193,7 @@ export default function App() {
       { step: 'Threat Intelligence Check', status: 'pending', detail: 'Waiting to review social engineering heuristics...' },
       { step: 'Risk Synthesis', status: 'pending', detail: 'Waiting to compile risk score...' },
       { step: 'Safety Planner', status: 'pending', detail: 'Waiting to assemble recommendations...' },
+      { step: 'Gemma 4 Analyst', status: 'pending', detail: 'Waiting to enrich the evidence summary...' },
       { step: 'Incident Report Generator', status: 'pending', detail: 'Waiting to draft incident documentation...' },
       { step: 'Safety Review Guardrail', status: 'pending', detail: 'Waiting for guardrail validation...' }
     );
@@ -172,7 +205,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           text: textToScan, 
-          situation: situation,
+          situation: situationToScan,
           image: imageToScan,
           mime_type: mimeToScan
         })
@@ -243,6 +276,14 @@ export default function App() {
           <div className="badge">
             <span className="status-dot active"></span>
             MCP Ready
+          </div>
+          <div className="badge" title={healthStatus.model || 'OpenRouter model'}>
+            <span className={`status-dot ${healthStatus.openRouter ? 'active' : 'inactive'}`}></span>
+            Gemma: {healthStatus.openRouter ? 'Live' : 'Fallback'}
+          </div>
+          <div className="badge">
+            <span className={`status-dot ${healthStatus.keySet ? 'active' : 'inactive'}`}></span>
+            Gemini OCR: {healthStatus.keySet ? 'Live' : 'Fallback'}
           </div>
           <div className="badge">
             <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
@@ -336,8 +377,8 @@ export default function App() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('courier')}>DHL SMS</button>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('bank')}>Bank Email</button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('bank')}>📷 Bank Screen</button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('courier')}>📷 Courier Screen</button>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('bank')}>Bank Screen</button>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('courier')}>Courier Screen</button>
               </div>
             </div>
           </div>
@@ -350,7 +391,7 @@ export default function App() {
               <div className="spinner" style={{ width: '48px', height: '48px', borderColor: 'var(--panel-border)', borderTopColor: 'var(--accent-primary)', borderWidth: '4px' }}></div>
               <div>
                 <h3 className="panel-title" style={{ justifyContent: 'center', marginBottom: '0.5rem', fontSize: '1.5rem' }}>Investigation in Progress</h3>
-                <p style={{ color: 'var(--text-secondary)' }}>Analyzing vectors, extracting context, and consulting threat intelligence...</p>
+                <p style={{ color: 'var(--text-secondary)' }}>Analyzing vectors, extracting context, and running TrustLens security heuristics...</p>
               </div>
             </div>
             
@@ -386,6 +427,9 @@ export default function App() {
                 <div>
                   <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Investigation Complete</h2>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>Confidence Index: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.35rem', fontFamily: 'var(--font-mono)' }}>
+                    AI Route: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong>
+                  </p>
                 </div>
                 <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
                   {report.verdict} Threat
@@ -434,7 +478,7 @@ export default function App() {
                           </div>
                           {dom.indicators.map((ind, j) => (
                             <div key={j} style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem' }}>
-                              <span style={{ color: 'var(--color-warning)' }}>•</span> {ind}
+                              <span style={{ color: 'var(--color-warning)' }}>-</span> {ind}
                             </div>
                           ))}
                         </div>
@@ -463,7 +507,7 @@ export default function App() {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                   Contextual Action Plan
                 </h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Customized for: <strong style={{ color: 'var(--text-primary)' }}>{getSituationLabel(situation)}</strong></p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Customized for: <strong style={{ color: 'var(--text-primary)' }}>{getSituationLabel(reportSituation)}</strong></p>
                 
                 <div>
                   {report.safe_steps.map((step, idx) => {
@@ -482,6 +526,63 @@ export default function App() {
                   })}
                 </div>
               </div>
+
+              {report.ai_analysis && (
+                <div className="panel">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <h3 className="panel-title" style={{ marginBottom: 0 }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
+                      Gemma 4 Analyst
+                    </h3>
+                    <span className="badge" style={{ color: report.ai_analysis.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)', flexShrink: 0 }}>
+                      {report.ai_analysis.fallback_used ? 'Fallback' : 'OpenRouter'}
+                    </span>
+                  </div>
+
+                  <div style={{ borderLeft: `4px solid ${getPriorityColor(report.ai_analysis.recommended_priority)}`, paddingLeft: '1rem', marginBottom: '1.25rem' }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: getPriorityColor(report.ai_analysis.recommended_priority), textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>
+                      Priority: {report.ai_analysis.recommended_priority || 'review'}
+                    </div>
+                    <p style={{ color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.5 }}>
+                      {report.ai_analysis.executive_summary}
+                    </p>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.75rem', fontSize: '0.9rem' }}>
+                      {report.ai_analysis.user_explanation}
+                    </p>
+                  </div>
+
+                  {report.ai_analysis.evidence?.length > 0 && (
+                    <div className="info-list" style={{ marginBottom: '1.25rem' }}>
+                      {report.ai_analysis.evidence.slice(0, 4).map((item, idx) => (
+                        <div key={idx} className="info-item" style={{ borderLeft: `4px solid ${getPriorityColor(item.severity)}`, flexDirection: 'column', gap: '0.35rem' }}>
+                          <strong style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>{item.signal}</strong>
+                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{item.why_it_matters}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {report.ai_analysis.questions?.length > 0 && (
+                    <div style={{ borderTop: '1px solid var(--panel-border)', paddingTop: '1rem' }}>
+                      <h4 style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Clarifying Questions</h4>
+                      <div className="info-list">
+                        {report.ai_analysis.questions.map((question, idx) => (
+                          <div key={idx} className="info-item">
+                            <span style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>{idx + 1}</span>
+                            <span>{question}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {report.ai_analysis.confidence_note && (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '1rem', fontFamily: 'var(--font-mono)' }}>
+                      {report.ai_analysis.confidence_note}
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="panel">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -544,10 +645,11 @@ export default function App() {
             <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <strong style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>System Architecture</strong>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>
-                <span>• Multimodal Vision OCR</span>
-                <span>• Google ADK</span>
-                <span>• MCP Threat Intel</span>
-                <span>• Local Guardrails</span>
+                <span>Gemini Vision OCR</span>
+                <span>OpenRouter Gemma 4</span>
+                <span>Google ADK</span>
+                <span>MCP Tool Server</span>
+                <span>Local Guardrails</span>
               </div>
             </div>
 
@@ -574,6 +676,19 @@ function getScoreColor(score: number) {
   if (score >= 70) return 'var(--color-danger)';
   if (score >= 35) return 'var(--color-warning)';
   return 'var(--color-safe)';
+}
+
+function getPriorityColor(priority: string) {
+  const normalized = (priority || '').toLowerCase();
+  if (normalized === 'lockdown' || normalized === 'urgent' || normalized === 'high') return 'var(--color-danger)';
+  if (normalized === 'caution' || normalized === 'medium') return 'var(--color-warning)';
+  return 'var(--color-safe)';
+}
+
+function getAiRouteLabel(ai?: AiAnalysis) {
+  if (!ai) return 'Local TrustLens Rules';
+  if (ai.fallback_used) return 'Local TrustLens Fallback';
+  return `${ai.provider} / ${ai.model}`;
 }
 
 function getStepIcon(stepText: string) {

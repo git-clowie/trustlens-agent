@@ -10,6 +10,106 @@ from trustlens_agent.tools import (
     generate_report_draft
 )
 
+TOOL_SCHEMAS = [
+    {
+        "name": "redact_pii",
+        "description": "Redacts PII (emails, phones, cards, CNP, SSN) from message text.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+            "required": ["text"]
+        }
+    },
+    {
+        "name": "extract_links",
+        "description": "Finds links and clean domains in text without visiting them.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+            "required": ["text"]
+        }
+    },
+    {
+        "name": "inspect_domain_pattern",
+        "description": "Checks a domain for spoofing, typosquatting, and risky TLDs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"domain": {"type": "string"}},
+            "required": ["domain"]
+        }
+    },
+    {
+        "name": "detect_social_engineering",
+        "description": "Finds urgency, impersonation, payment pressure, and credential hooks in text.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"text": {"type": "string"}},
+            "required": ["text"]
+        }
+    },
+    {
+        "name": "score_risk",
+        "description": "Computes a consolidated risk score from domain reports and text indicators.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "domain_reports": {"type": "array"},
+                "text_indicators": {"type": "array"}
+            },
+            "required": ["domain_reports", "text_indicators"]
+        }
+    },
+    {
+        "name": "generate_safe_steps",
+        "description": "Generates safe next steps for before_click, clicked_only, or compromised situations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "verdict": {"type": "string"},
+                "situation": {"type": "string"}
+            },
+            "required": ["verdict", "situation"]
+        }
+    },
+    {
+        "name": "generate_report_draft",
+        "description": "Generates an anonymized incident report draft for escalation or reporting.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string"},
+                "redacted_text": {"type": "string"},
+                "risk_score": {"type": "integer"},
+                "indicators": {"type": "array"}
+            },
+            "required": ["text", "redacted_text", "risk_score", "indicators"]
+        }
+    }
+]
+
+def call_tool(tool_name: str, tool_args: dict):
+    """Dispatches MCP tool calls for both standard names and FastMCP-style aliases."""
+    if tool_name in ("redact_pii", "clean_text_pii"):
+        return redact_pii(tool_args.get("text", ""))
+    if tool_name in ("extract_links", "get_links"):
+        return extract_links(tool_args.get("text", ""))
+    if tool_name in ("inspect_domain_pattern", "analyze_domain"):
+        return inspect_domain_pattern(tool_args.get("domain", ""))
+    if tool_name in ("detect_social_engineering", "check_social_engineering"):
+        return detect_social_engineering(tool_args.get("text", ""))
+    if tool_name in ("score_risk", "assess_risk"):
+        return score_risk(tool_args.get("domain_reports", []), tool_args.get("text_indicators", []))
+    if tool_name in ("generate_safe_steps", "fetch_safe_steps"):
+        return generate_safe_steps(tool_args.get("verdict", "Low"), tool_args.get("situation", "before_click"))
+    if tool_name in ("generate_report_draft", "draft_report"):
+        return generate_report_draft(
+            tool_args.get("text", ""),
+            tool_args.get("redacted_text", ""),
+            int(tool_args.get("risk_score", 0)),
+            tool_args.get("indicators", [])
+        )
+    raise ValueError(f"Unknown tool: {tool_name}")
+
 # Attempt to import FastMCP from the python-mcp library
 try:
     from mcp.server.fastmcp import FastMCP
@@ -102,44 +202,7 @@ def handle_json_rpc(line):
                 "jsonrpc": "2.0",
                 "id": req_id,
                 "result": {
-                    "tools": [
-                        {
-                            "name": "redact_pii",
-                            "description": "Redacts PII (emails, phones, cards, CNP, SSN) from message text.",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {"text": {"type": "string"}},
-                                "required": ["text"]
-                            }
-                        },
-                        {
-                            "name": "extract_links",
-                            "description": "Finds links and clean domains in text.",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {"text": {"type": "string"}},
-                                "required": ["text"]
-                            }
-                        },
-                        {
-                            "name": "inspect_domain_pattern",
-                            "description": "Checks a domain for spoofing or typosquatting.",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {"domain": {"type": "string"}},
-                                "required": ["domain"]
-                            }
-                        },
-                        {
-                            "name": "detect_social_engineering",
-                            "description": "Finds urgency or financial request hooks in text.",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {"text": {"type": "string"}},
-                                "required": ["text"]
-                            }
-                        }
-                    ]
+                    "tools": TOOL_SCHEMAS
                 }
             }
             
@@ -147,18 +210,7 @@ def handle_json_rpc(line):
         elif method == "tools/call" or method == "callTool":
             tool_name = params.get("name")
             tool_args = params.get("arguments", {})
-            
-            result_data = None
-            if tool_name == "redact_pii":
-                result_data = redact_pii(tool_args.get("text", ""))
-            elif tool_name == "extract_links":
-                result_data = extract_links(tool_args.get("text", ""))
-            elif tool_name == "inspect_domain_pattern":
-                result_data = inspect_domain_pattern(tool_args.get("domain", ""))
-            elif tool_name == "detect_social_engineering":
-                result_data = detect_social_engineering(tool_args.get("text", ""))
-            else:
-                raise ValueError(f"Unknown tool: {tool_name}")
+            result_data = call_tool(tool_name, tool_args)
                 
             res = {
                 "jsonrpc": "2.0",
@@ -167,7 +219,7 @@ def handle_json_rpc(line):
                     "content": [
                         {
                             "type": "text",
-                            "text": json.dumps(result_data, indent=2)
+                            "text": json.dumps(result_data, indent=2, ensure_ascii=False)
                         }
                     ]
                 }

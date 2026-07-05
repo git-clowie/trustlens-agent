@@ -22,6 +22,27 @@ SUSPICIOUS_TLDS = {
     '.work', '.click', '.gq', '.cf', '.tk', '.ml', '.ga', '.today', '.live'
 }
 
+def _domain_tokens(domain: str) -> list:
+    """Split a domain into meaningful labels/tokens without treating substrings as brands."""
+    return [token for token in re.split(r'[^a-z0-9]+', domain.lower()) if token]
+
+def _brand_tokens(brand: str) -> list:
+    return [token for token in re.split(r'[^a-z0-9]+', brand.lower()) if token]
+
+def _domain_mentions_brand(domain: str, brand: str) -> bool:
+    tokens = _domain_tokens(domain)
+    brand_tokens = _brand_tokens(brand)
+    if not brand_tokens:
+        return False
+
+    # Short brands such as ING, BT, BCR, BRD, UPS must be exact tokens.
+    # This avoids false positives such as "handling" -> "ing".
+    if len(brand_tokens) == 1:
+        return brand_tokens[0] in tokens
+
+    phrase_length = len(brand_tokens)
+    return any(tokens[i:i + phrase_length] == brand_tokens for i in range(len(tokens) - phrase_length + 1))
+
 def redact_pii(text: str) -> str:
     """
     Scans the text and replaces sensitive PII with safe placeholders.
@@ -32,17 +53,17 @@ def redact_pii(text: str) -> str:
     # Redact email addresses
     redacted = re.sub(EMAIL_REGEX, '[REDACTED_EMAIL]', redacted)
     
-    # Redact phone numbers
-    redacted = re.sub(PHONE_REGEX, '[REDACTED_PHONE]', redacted)
-    
-    # Redact credit cards
-    redacted = re.sub(CREDIT_CARD_REGEX, '[REDACTED_CREDIT_CARD]', redacted)
-    
-    # Redact Romanian CNP
-    redacted = re.sub(CNP_REGEX, '[REDACTED_SSN]', redacted)
-    
     # Redact US SSN
     redacted = re.sub(SSN_REGEX, '[REDACTED_SSN]', redacted)
+
+    # Redact Romanian CNP before phone/card patterns can consume the digits
+    redacted = re.sub(CNP_REGEX, '[REDACTED_SSN]', redacted)
+
+    # Redact credit cards before phone numbers to avoid partial phone-style matches
+    redacted = re.sub(CREDIT_CARD_REGEX, '[REDACTED_CREDIT_CARD]', redacted)
+
+    # Redact phone numbers
+    redacted = re.sub(PHONE_REGEX, '[REDACTED_PHONE]', redacted)
     
     return redacted
 
@@ -105,12 +126,14 @@ def inspect_domain_pattern(domain: str) -> dict:
     for brand in COMMON_BRANDS:
         # If the brand name is in the domain, but it is not the main domain (e.g. dhl.support-portal.xyz)
         # OR if it's merged with other words (e.g. netflix-login-renew.com)
-        if brand in domain:
+        if _domain_mentions_brand(domain, brand):
             parts = domain.split('.')
             main_domain_part = parts[-2] if len(parts) >= 2 else parts[0]
+            main_domain_tokens = _domain_tokens(main_domain_part)
+            brand_tokens = _brand_tokens(brand)
             
             # If the brand is present, but it's not the exact main domain or a standard subdomain
-            if main_domain_part != brand:
+            if main_domain_tokens != brand_tokens:
                 detected_brands.append(brand)
                 indicators.append(f"Impersonates brand '{brand}' in a suspicious domain layout")
                 risk_score += 40
@@ -222,7 +245,7 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
     message body social engineering analysis.
     """
     total_score = 0
-    confidence = 80 # default confidence
+    confidence = 55
     
     # Social engineering indicators add up
     total_score += len(text_indicators) * 20
@@ -232,6 +255,11 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
     for rep in domain_reports:
         if rep['risk_score'] > max_domain_score:
             max_domain_score = rep['risk_score']
+    if domain_reports:
+        confidence += 15
+    if max_domain_score >= 70:
+        confidence += 15
+    confidence += min(len(text_indicators) * 8, 24)
             
     # Combine scores
     if max_domain_score > 0:
@@ -271,7 +299,7 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
     return {
         'risk_score': total_score,
         'verdict': verdict,
-        'confidence': confidence,
+        'confidence': min(confidence, 98),
         'breakdown': breakdown
     }
 
@@ -280,6 +308,33 @@ def generate_safe_steps(message_type: str, situation: str) -> list:
     Generates actionable, safe next steps tailored to the user's specific context.
     Matches 'before_click', 'clicked_only', or 'compromised'.
     """
+    if situation == 'before_click':
+        return [
+            "DO NOT click any link in the message.",
+            "Do not reply to the sender. Scammers often use replies to verify that a phone number or email is active.",
+            "Verify independently: use the official website or official app by typing the address yourself.",
+            "Report and delete: block the sender, mark it as spam, and remove the message.",
+        ]
+    if situation == 'clicked_only':
+        return [
+            "Close the browser tab immediately to stop any active scripts.",
+            "Clear cache and cookies for the browser used to open the link.",
+            "Run a security scan using a trusted antivirus or antimalware tool.",
+            "Check downloads for recent files such as .exe, .dmg, .apk, or .zip, and delete suspicious files without opening them.",
+        ]
+    if situation == 'compromised':
+        return [
+            "Contact your bank immediately using the official phone number on your card or banking app.",
+            "Change passwords immediately on the affected service and anywhere the same password was reused.",
+            "Enable multi-factor authentication on email, banking, and social accounts.",
+            "Monitor accounts and card transactions for unexpected activity.",
+        ]
+
+    return [
+        "Be cautious and avoid interacting with suspicious links or unknown senders.",
+        "Report unsolicited requests for personal or financial information to official portals.",
+    ]
+
     steps = []
     
     if situation == 'before_click':

@@ -16,6 +16,7 @@ from trustlens_agent.tools import (
     generate_safe_steps,
     generate_report_draft
 )
+from trustlens_agent.openrouter_client import generate_gemma_analysis
 
 # Attempt to import GenAI for OCR
 try:
@@ -209,8 +210,29 @@ class TrustLensCoordinatorAgent:
         safe_steps = generate_safe_steps(summary['verdict'], situation)
         trace[-1]['status'] = 'completed'
         trace[-1]['detail'] = f"Custom safety steps generated successfully ({len(safe_steps)} recommendations)."
+
+        # 7. Optional OpenRouter / Gemma 4 analyst enrichment
+        trace.append({
+            'step': 'Gemma 4 Analyst',
+            'status': 'running',
+            'detail': 'Generating a human-readable security explanation via OpenRouter Gemma 4 when configured...'
+        })
+        time.sleep(0.3)
+        ai_analysis = generate_gemma_analysis(
+            redacted_text=redacted_text,
+            situation=situation,
+            summary=summary,
+            domain_reports=domain_reports,
+            social_engineering_indicators=se_indicators,
+            safe_steps=safe_steps,
+        )
+        trace[-1]['status'] = 'completed'
+        if ai_analysis.get('fallback_used'):
+            trace[-1]['detail'] = 'Gemma 4 enrichment unavailable. Deterministic TrustLens explanation attached.'
+        else:
+            trace[-1]['detail'] = f"Gemma 4 enrichment completed via {ai_analysis.get('model', 'OpenRouter')}."
         
-        # 7. Automated Incident Reporting Step
+        # 8. Automated Incident Reporting Step
         trace.append({
             'step': 'Incident Report Generator',
             'status': 'running',
@@ -221,7 +243,7 @@ class TrustLensCoordinatorAgent:
         trace[-1]['status'] = 'completed'
         trace[-1]['detail'] = "Authority report draft compiled."
         
-        # 8. Output Guardrail Review
+        # 9. Output Guardrail Review
         trace.append({
             'step': 'Safety Review Guardrail',
             'status': 'running',
@@ -248,6 +270,7 @@ class TrustLensCoordinatorAgent:
             'confidence': summary['confidence'],
             'breakdown': summary['breakdown'],
             'safe_steps': safe_steps,
+            'ai_analysis': ai_analysis,
             'report_draft': report_draft,
             'trace': trace,
             'adk_framework_loaded': self.has_adk,

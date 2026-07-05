@@ -12,6 +12,7 @@ if src_dir not in sys.path:
     sys.path.insert(0, src_dir)
 
 from trustlens_agent.adk_agent import TrustLensCoordinatorAgent
+from trustlens_agent.openrouter_client import DEFAULT_OPENROUTER_MODEL
 
 app = FastAPI(
     title="TrustLens Security Agent API",
@@ -64,7 +65,9 @@ async def health_check():
     return {
         "status": "healthy",
         "adk_available": coordinator.has_adk,
-        "api_key_set": bool(os.getenv("GEMINI_API_KEY"))
+        "api_key_set": bool(os.getenv("GEMINI_API_KEY")),
+        "openrouter_key_set": bool(os.getenv("OPENROUTER_API_KEY")),
+        "openrouter_model": os.getenv("OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL),
     }
 
 # Mount Vite static site if built

@@ -64,7 +64,7 @@ Building TrustLens was a testament to the "Vibe Coding" methodology:
     2.  `[Link Extraction]` Extracted domain: `dhl.customs-fee-handling.xyz`
     3.  `[Domain Inspection]` Flagged. High-risk layout impersonating DHL.
     4.  `[Threat Intelligence Check]` Detected urgency ("imediat") and financial requests.
-    5.  `[Risk Synthesis]` Computed Verdict: **HIGH RISK** (Risk Score: 95/100).
+    5.  `[Risk Synthesis]` Computed Verdict: **HIGH RISK** (Risk Score: 100/100).
     6.  `[Safety Planner]` Output:
         *   Do not click link.
         *   Do not reply to sender.
