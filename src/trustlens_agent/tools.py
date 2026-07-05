@@ -246,27 +246,62 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
     """
     total_score = 0
     confidence = 55
+    score_trace = []
     
     # Social engineering indicators add up
+    for indicator in text_indicators:
+        category = indicator.get('category', 'Text Signal')
+        score_trace.append({
+            'label': category,
+            'impact': 20,
+            'source': 'message_text',
+            'severity': _indicator_severity(category),
+            'evidence': indicator.get('detail', 'Detected social engineering pattern.'),
+            'calculation': '+20 for a matched social engineering signal.'
+        })
     total_score += len(text_indicators) * 20
     
     # Domain inspection overrides or adds to score
     max_domain_score = 0
+    highest_domain_report = None
     for rep in domain_reports:
-        if rep['risk_score'] > max_domain_score:
-            max_domain_score = rep['risk_score']
+        report_score = int(rep.get('risk_score', 0) or 0)
+        if report_score > max_domain_score:
+            max_domain_score = report_score
+            highest_domain_report = rep
     if domain_reports:
         confidence += 15
     if max_domain_score >= 70:
         confidence += 15
     confidence += min(len(text_indicators) * 8, 24)
+
+    if highest_domain_report:
+        domain = highest_domain_report.get('domain', 'suspicious domain')
+        indicators = highest_domain_report.get('indicators', [])
+        score_trace.insert(0, {
+            'label': 'Highest domain risk',
+            'impact': max_domain_score,
+            'source': 'domain_pattern',
+            'severity': _score_severity(max_domain_score),
+            'evidence': f"{domain}: {'; '.join(indicators[:2]) if indicators else 'Domain risk pattern detected.'}",
+            'calculation': 'Uses the highest offline domain risk as the score floor.'
+        })
             
     # Combine scores
     if max_domain_score > 0:
+        before_escalation = max(total_score, max_domain_score)
         total_score = max(total_score, max_domain_score)
         # If there are both suspicious text AND a malicious domain, push to max
         if len(text_indicators) >= 2:
             total_score = max(total_score + 15, 95)
+            score_trace.append({
+                'label': 'Domain plus persuasion combo',
+                'impact': total_score - before_escalation,
+                'source': 'risk_synthesis',
+                'severity': _score_severity(total_score),
+                'evidence': 'A risky destination appears together with multiple persuasion hooks.',
+                'calculation': 'Raises combined link-and-pressure cases to at least 95/100.'
+            })
     else:
         # If no links, but severe social engineering pattern (e.g. romance scam, text-only bank fraud)
         total_score = min(total_score, 85)
@@ -295,13 +330,36 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
         
     if not breakdown:
         breakdown.append("No common scam signatures identified in the message structure.")
+        score_trace.append({
+            'label': 'Baseline review',
+            'impact': 0,
+            'source': 'local_rules',
+            'severity': 'low',
+            'evidence': 'No unsafe link or common scam wording was identified.',
+            'calculation': 'No positive risk contribution from the current rule set.'
+        })
         
     return {
         'risk_score': total_score,
         'verdict': verdict,
         'confidence': min(confidence, 98),
-        'breakdown': breakdown
+        'breakdown': breakdown,
+        'score_trace': score_trace
     }
+
+def _score_severity(score: int) -> str:
+    if score >= 70:
+        return 'high'
+    if score >= 35:
+        return 'medium'
+    return 'low'
+
+def _indicator_severity(category: str) -> str:
+    if category in ('Financial Request', 'Data Collection Prompt'):
+        return 'high'
+    if category in ('Urgency & Pressure', 'Brand Impersonation'):
+        return 'medium'
+    return 'low'
 
 def generate_safe_steps(message_type: str, situation: str) -> list:
     """
@@ -347,22 +405,18 @@ def generate_report_draft(text: str, redacted_text: str, risk_score: int, indica
             break
             
     threats = [ind['category'] for ind in indicators]
+    risk_level = 'HIGH' if risk_score >= 70 else 'MEDIUM' if risk_score >= 35 else 'LOW'
     
-    report = f"""--- PHISHING / SCAM INCIDENT REPORT ---
-Target Brand: {brand.upper()}
-Threat Indicators: {', '.join(threats) if threats else 'Generic Phishing'}
-Computed Risk Level: {'HIGH' if risk_score >= 70 else 'MEDIUM' if risk_score >= 35 else 'LOW'} ({risk_score}/100)
+    report = f"""TRUSTLENS INCIDENT SNAPSHOT
+Risk: {risk_level} ({risk_score}/100)
+Target brand: {brand.upper()}
+Signals: {', '.join(threats) if threats else 'No common scam signature'}
+Privacy: User identifiers redacted before analysis
 
-SUSPICIOUS TEXT (Anonymized for Privacy):
-----------------------------------------
+Anonymized suspicious content:
 {redacted_text}
-----------------------------------------
 
-INVESTIGATION DETAILS:
-- Social Engineering features detected: {len(indicators)} indicators.
-- User Privacy status: Protected via automatic PII redaction.
-
-REPORTING ACTION REQUESTED:
-Please flag the associated links and sender details as malicious and block hosting/distribution.
+Requested action:
+Flag associated links/senders for abuse review and block malicious distribution.
 """
     return report.strip()

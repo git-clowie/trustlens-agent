@@ -13,9 +13,9 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 1. **Multimodal Vision OCR**: Screenshot messages can be transcribed with Gemini Vision before analysis.
 2. **OpenRouter Gemma 4 Analyst**: Optional hosted Gemma enrichment adds plain-language explanation, evidence notes, clarifying questions, and action priority.
 3. **Marked Fallback Mode**: If Gemini or OpenRouter is unavailable, TrustLens uses deterministic fallbacks and clearly labels them.
-4. **Evidence Analytics Dashboard**: Shows link count, maximum domain risk, social engineering hooks, AI route, confidence, and trace depth.
+4. **Evidence Analytics + Score Trace**: Shows link count, maximum domain risk, social hooks, AI route, confidence, trace depth, and structured score contributions.
 5. **Local Case History**: Stores anonymized investigations in browser localStorage so users can reopen recent cases.
-6. **Export & Share**: Copies incident reports, copies short share summaries, and exports full JSON case packets.
+6. **Compact Case Packet**: Shows a balanced reporting snapshot with risk, context, primary evidence, top score contributors, copy summary, and JSON export.
 7. **Privacy-First PII Redaction**: Masks emails, phone numbers, cards, CNPs, and SSNs before external model enrichment.
 8. **Offline Domain Inspection**: Detects typosquatting, brand impersonation, suspicious TLDs, hyphen-heavy domains, and digit-heavy domains without opening links.
 9. **Situation-Aware Safety Planner**: Adjusts next steps for prevention, clicked-link inspection, or compromised-data recovery.
@@ -34,7 +34,7 @@ flowchart TD
   Agent --> Links["extract_links"]
   Agent --> Domains["inspect_domain_pattern"]
   Agent --> Social["detect_social_engineering"]
-  Agent --> Score["score_risk"]
+  Agent --> Score["score_risk + score_trace"]
   Agent --> Steps["generate_safe_steps"]
   Agent --> Report["generate_report_draft"]
   Agent --> Gemma["OpenRouter Gemma 4 Analyst"]
@@ -166,7 +166,7 @@ Example Claude Desktop configuration:
 | MCP Server | JSON-RPC MCP server exposing PII redaction, link extraction, domain inspection, social engineering detection, scoring, planning, and reporting. |
 | Safety & Privacy | Local PII redaction, zero-trust offline domain parsing, no link opening, and marked model fallbacks. |
 | Deployability | Single FastAPI app serving the built React demo, plus Docker-ready files. |
-| User Experience | Evidence analytics, Gemma analyst panel, local case history, export/share controls, and situation-aware recovery steps. |
+| User Experience | Evidence analytics, structured score trace, Gemma analyst panel, local case history, export/share controls, and situation-aware recovery steps. |
 
 ## Verification
 
@@ -183,3 +183,4 @@ Presentation docs:
 * `docs/video_script.md`
 * `docs/presentation_deck.md`
 * `docs/epic_roadmap.md`
+* `docs/next_features.md`

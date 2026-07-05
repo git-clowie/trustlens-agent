@@ -57,8 +57,10 @@ class TrustLensToolTests(unittest.TestCase):
         self.assertGreaterEqual(len(indicators), 3)
         self.assertEqual(summary["verdict"], "High")
         self.assertGreaterEqual(summary["risk_score"], 95)
+        self.assertGreaterEqual(len(summary["score_trace"]), 3)
+        self.assertEqual(summary["score_trace"][0]["source"], "domain_pattern")
+        self.assertTrue(any(item["label"] == "Domain plus persuasion combo" for item in summary["score_trace"]))
 
 
 if __name__ == "__main__":
     unittest.main()
-

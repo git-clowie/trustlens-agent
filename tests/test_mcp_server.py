@@ -58,8 +58,9 @@ class TrustLensMcpServerTests(unittest.TestCase):
 
         self.assertEqual(result["verdict"], "High")
         self.assertGreaterEqual(result["risk_score"], 95)
+        self.assertGreaterEqual(len(result["score_trace"]), 3)
+        self.assertEqual(result["score_trace"][0]["source"], "domain_pattern")
 
 
 if __name__ == "__main__":
     unittest.main()
-

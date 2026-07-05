@@ -9,7 +9,7 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - This makes the "critical seconds before clicking" story feel real.
 
 2. **Explainable Risk Evidence** *(implemented in demo build)*
-   - Evidence Analytics now shows link count, maximum domain risk, social hooks, agent trace depth, AI route, and confidence.
+   - Evidence Analytics now shows link count, maximum domain risk, social hooks, agent trace depth, AI route, confidence, and structured score trace contributions.
    - The Gemma 4 Analyst panel adds evidence notes and clarifying questions, with a marked deterministic fallback.
 
 3. **Local Case History** *(implemented in demo build)*
@@ -34,12 +34,12 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - Add a `fixtures/` folder with safe synthetic examples for courier, bank, lottery, romance, and QR phishing.
    - Use these fixtures for unit tests, CLI demos, and UI samples.
 
-3. **Scoring Trace Contract**
+3. **Scoring Trace Contract** *(implemented in demo build)*
    - Return a structured score trace from `score_risk`, not just the final score.
-   - The UI already renders higher-level evidence analytics; a backend score-contribution contract would make this even more precise.
+   - The UI renders the highest domain contribution, text persuasion hooks, and synthesis escalation as auditable score cards.
 
 4. **Exportable Case Packet** *(implemented in demo build)*
-   - The web UI can copy the full incident draft, copy a short share summary, and export the full JSON case packet.
+   - The web UI can copy the compact incident snapshot, copy a short share summary, and export the full JSON case packet.
 
 5. **Deployment Story**
    - Add a one-command Docker demo: `docker build -t trustlens .` then `docker run -p 8000:8000 trustlens`.

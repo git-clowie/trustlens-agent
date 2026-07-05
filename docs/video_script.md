@@ -26,7 +26,7 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 ### Scene 2: Text Verification Demo & Auto-Scan (0:25 - 1:05)
 
 * **Visual on screen:** Click the "DHL SMS" quick sample button. Watch the timeline run through PII Redaction, Domain Inspection, Risk Synthesis, Safety Planner, and Gemma 4 Analyst.
-* **Action:** Scroll down slowly to show the threat score, Evidence Analytics, domain audit, Gemma 4 Analyst panel, and contextual action plan.
+* **Action:** Scroll down slowly to show the threat score, Evidence Analytics, Score Trace, domain audit, Gemma 4 Analyst panel, and contextual action plan.
 * **Voiceover:**
   > "With one click, TrustLens triggers a multi-step investigation pipeline. It redacts personal data locally, inspects the destination domain without opening it, detects social engineering tactics, scores the risk, and enriches the result with a Gemma 4 analyst layer through OpenRouter when configured. In this DHL sample, the score reaches 100 out of 100 because of brand impersonation, a suspicious top-level domain, and artificial urgency."
 
@@ -43,10 +43,10 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ### Scene 4: Situation-Aware Planning, Export, and History (1:40 - 2:20)
 
-* **Visual on screen:** Show "Contextual Action Plan", then the Report Draft controls: Copy Report, Copy Summary, and Export JSON.
+* **Visual on screen:** Show "Contextual Action Plan", then the compact Case Packet controls: Copy Report, Copy Summary, and Export JSON.
 * **Action:** Return to the main screen and show Case History with the anonymized saved investigation.
 * **Voiceover:**
-  > "TrustLens does not stop at a scary score. The action plan changes based on what the user already did: not clicked, clicked, or shared data. It can copy a short share summary, export a full JSON case packet, and reopen anonymized local history so repeated scams can be compared safely."
+  > "TrustLens does not stop at a scary score. The action plan changes based on what the user already did: not clicked, clicked, or shared data. The compact case packet gives a balanced snapshot for reporting, can copy a short share summary, exports a full JSON case packet, and reopens anonymized local history so repeated scams can be compared safely."
 
 ---
 

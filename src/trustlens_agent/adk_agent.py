@@ -269,6 +269,7 @@ class TrustLensCoordinatorAgent:
             'risk_score': summary['risk_score'],
             'confidence': summary['confidence'],
             'breakdown': summary['breakdown'],
+            'score_trace': summary['score_trace'],
             'safe_steps': safe_steps,
             'ai_analysis': ai_analysis,
             'report_draft': report_draft,

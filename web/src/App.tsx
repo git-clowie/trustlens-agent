@@ -42,6 +42,15 @@ interface DomainReport {
   detected_brands: string[];
 }
 
+interface ScoreTraceItem {
+  label: string;
+  impact: number;
+  source: string;
+  severity: string;
+  evidence: string;
+  calculation: string;
+}
+
 interface AiEvidence {
   signal: string;
   why_it_matters: string;
@@ -72,6 +81,7 @@ interface InvestigationReport {
   risk_score: number;
   confidence: number;
   breakdown: string[];
+  score_trace: ScoreTraceItem[];
   safe_steps: string[];
   ai_analysis: AiAnalysis;
   report_draft: string;
@@ -579,6 +589,26 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              {report.score_trace?.length > 0 && (
+                <div className="score-trace">
+                  <h4 className="section-kicker">Score Trace</h4>
+                  <div className="score-trace-list">
+                    {report.score_trace.slice(0, 6).map((item, idx) => (
+                      <div key={`${item.label}-${idx}`} className="score-trace-item">
+                        <div className="score-trace-topline">
+                          <strong>{item.label}</strong>
+                          <span style={{ color: getTraceColor(item) }}>+{item.impact}</span>
+                        </div>
+                        <div className="score-trace-bar" aria-hidden="true">
+                          <span style={{ width: `${Math.min(Math.max(item.impact, 4), 100)}%`, background: getTraceColor(item) }}></span>
+                        </div>
+                        <p>{item.evidence}</p>
+                        <small>{item.source.replace(/_/g, ' ')} - {item.calculation}</small>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Left Column */}
@@ -728,13 +758,13 @@ export default function App() {
                 </div>
               )}
 
-              <div className="panel">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
+              <div className="panel report-pack">
+                <div className="report-pack-header">
                   <h3 className="panel-title" style={{ marginBottom: 0 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    Report Draft
+                    Case Packet
                   </h3>
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div className="report-actions">
                     <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
                       {copySuccess ? 'Copied!' : 'Copy Report'}
                     </button>
@@ -746,7 +776,31 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-                <div className="redacted-view" style={{ background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
+
+                <div className="report-summary-grid">
+                  <div className="report-summary-item">
+                    <span>Risk</span>
+                    <strong style={{ color: getScoreColor(report.risk_score) }}>{report.verdict} / {report.risk_score}</strong>
+                  </div>
+                  <div className="report-summary-item">
+                    <span>Context</span>
+                    <strong>{getSituationLabel(reportSituation)}</strong>
+                  </div>
+                  <div className="report-summary-item">
+                    <span>Primary Evidence</span>
+                    <strong>{getPrimaryEvidence(report)}</strong>
+                  </div>
+                </div>
+
+                <div className="report-chip-row">
+                  {getTopScoreContributors(report).map((item, idx) => (
+                    <span key={`${item.label}-${idx}`} className="report-chip" style={{ borderColor: getTraceColor(item), color: getTraceColor(item) }}>
+                      +{item.impact} {item.label}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="redacted-view report-preview">
                   {report.report_draft}
                 </div>
               </div>
@@ -866,6 +920,28 @@ function getAiRouteLabel(ai?: AiAnalysis) {
   return `${ai.provider} / ${ai.model}`;
 }
 
+function getTraceColor(item: ScoreTraceItem) {
+  if (item.severity === 'high' || item.impact >= 70) return 'var(--color-danger)';
+  if (item.severity === 'medium' || item.impact >= 35) return 'var(--color-warning)';
+  return 'var(--color-safe)';
+}
+
+function getPrimaryEvidence(report: InvestigationReport) {
+  const topDomain = report.domain_reports?.slice().sort((a, b) => b.risk_score - a.risk_score)[0];
+  if (topDomain) return topDomain.domain;
+  const topIndicator = report.social_engineering_indicators?.[0];
+  if (topIndicator) return topIndicator.category;
+  return 'No major signal';
+}
+
+function getTopScoreContributors(report: InvestigationReport) {
+  return (report.score_trace || [])
+    .filter((item) => item.impact > 0)
+    .slice()
+    .sort((a, b) => b.impact - a.impact)
+    .slice(0, 3);
+}
+
 function sanitizeReportForHistory(report: InvestigationReport): InvestigationReport {
   const redactedText = report.redacted_text || '[REDACTED_SCREENSHOT_TEXT]';
 
@@ -927,6 +1003,7 @@ function getEvidenceStats(report: InvestigationReport) {
 
 function buildShareSummary(report: InvestigationReport, situation: string) {
   const domains = report.domain_reports?.map((item) => `${item.domain} (${item.risk_score}/100)`).join(', ') || 'none';
+  const topEvidence = report.score_trace?.slice(0, 3).map((item) => `${item.label} +${item.impact}`).join('; ') || report.breakdown.join('; ');
   const actions = report.safe_steps?.slice(0, 3).map((step, idx) => `${idx + 1}. ${step}`).join('\n') || 'No actions generated.';
 
   return [
@@ -936,6 +1013,7 @@ function buildShareSummary(report: InvestigationReport, situation: string) {
     `AI route: ${getAiRouteLabel(report.ai_analysis)}`,
     `Domains: ${domains}`,
     `Signals: ${report.breakdown.join('; ')}`,
+    `Score trace: ${topEvidence}`,
     ``,
     `Recommended next actions:`,
     actions,
