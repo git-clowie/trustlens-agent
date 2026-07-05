@@ -1,0 +1,26 @@
+# Environment variables
+.env
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# Node dependencies
+web/node_modules/
+web/dist-ssr/
+.eslintcache
+
+# IDE specific settings
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
