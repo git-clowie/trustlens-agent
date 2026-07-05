@@ -4,74 +4,96 @@
   <img src="./docs/assets/banner.jpg" alt="TrustLens Banner" width="100%" style="border-radius: 12px;" />
 </div>
 
-## 🛡️ Project Overview & Problem Statement
+## Project Overview
 
-Phishing attacks and social engineering scams account for a significant portion of security breaches. Every day, millions of people receive suspicious text messages, package fee notifications, bank alerts, or unsolicited links. 
+Phishing attacks and social engineering scams often hit users in the critical seconds before they click. Traditional scanners may say a message is risky, but they rarely answer the user's real question: what should I do now?
 
-The traditional defense is a basic **phishing score scanner** (e.g. "This link is 80% dangerous"). However, a simple number does not solve the user's primary dilemma:
-*   *What do I do now?*
-*   *I already clicked it, am I infected?*
-*   *I filled in my credit card details, how do I block it?*
-*   *How do I explain this situation to my family or authorities?*
+**TrustLens Agent** is an AI Security Concierge that inspects suspicious SMS, email, chat, DM, and screenshot threats. It redacts private data, checks links without visiting them, detects social engineering tactics, explains the risk score, and generates a situation-aware safety plan.
 
-**TrustLens Agent** changes this. It is an **AI Security Concierge** that acts as an investigator and advisor. Instead of just scoring threat risk, it runs a multi-step investigation trace (PII cleaning, domain structure layout checks, social engineering keyword scanning), assesses risk levels, and generates a **customized, context-aware safety plan** based on the user's current situation (before click, clicked link, or credentials compromised). Finally, it drafts an incident report suitable for authorities.
+TrustLens supports three user states:
 
----
+* **Prevention:** the user has not clicked.
+* **Inspection:** the user clicked a link but did not share data.
+* **Recovery:** the user shared credentials, card data, or personal information.
 
-## 🏛️ Multi-Agent Architecture & Design
+## Architecture
 
-The agent is designed using a code-first, tool-enabled orchestrator leveraging Google's **Agent Development Kit (ADK)**:
+TrustLens is built as a code-first agentic pipeline:
 
-1.  **TrustLensCoordinatorAgent (Root)**: Coordinates the flow, invokes tools sequentially, aggregates findings, and applies final safety guardrails to ensure no PII leaks.
-2.  **Privacy Guardrail (redact_pii)**: An offline regular-expression matching filter that masks sensitive info (SSNs, cards, phone numbers, emails) before models or external tools parse the message text.
-3.  **Link Parser (extract_links)**: Extracts domains safely, applying a zero-trust model (it never connects to or visits the links to prevent drive-by downloads or IP exposure).
-4.  **Domain Checker (inspect_domain_pattern)**: Performs heuristic audits on domains, checking for typosquatting (e.g. netfl1x), subdomains imitating brands (e.g. dhl.shipping-portal.xyz), and suspicious TLDs (.xyz, .cc, .top).
-5.  **Heuristics Assessor (detect_social_engineering)**: Analyzes urgency, pressure tactics, brand impersonations, and financial triggers in text.
-6.  **Safety Planner (generate_safe_steps)**: Maps risk verdict + user context to concrete, prioritized action plans.
-7.  **Incident Reporter (generate_report_draft)**: Synthesizes threat signals into a standard incident draft.
+1. **TrustLensCoordinatorAgent:** orchestrates the investigation flow.
+2. **PII Redaction:** masks emails, phones, cards, SSNs, and Romanian CNP-style IDs.
+3. **Link Extraction:** parses URLs without opening them.
+4. **Domain Inspection:** detects suspicious TLDs, brand impersonation, typosquatting, and risky layouts.
+5. **Social Engineering Detection:** finds urgency, money pressure, brand claims, and credential prompts.
+6. **Risk Synthesis:** returns verdict, confidence, breakdown, and structured `score_trace`.
+7. **Safety Planner:** creates next steps based on the user's current state.
+8. **Gemma 4 Analyst:** optionally enriches the explanation through OpenRouter, with a marked local fallback.
+9. **Case Packet:** generates a compact reporting snapshot with first safe move and anonymized content.
 
----
+## Interfaces
 
-## 🔌 Core Concepts Demonstrated
+TrustLens can be used from multiple surfaces:
 
-We have successfully integrated 5 core concepts from the course curriculum:
+* **React/FastAPI dashboard:** main capstone demo UI.
+* **CLI:** `trustlens scan --sample courier`.
+* **MCP server:** `trustlens-mcp` or `python -m trustlens_agent.mcp_server`.
+* **MCP demo script:** `python scripts/mcp_demo.py`.
+* **Chrome companion extension:** `extension/`, loaded unpacked, for selected webpage text.
 
-*   **Google ADK (Agent Development Kit)**: Built utilizing the official `google-adk` framework, declaring a coordinator LLM agent equipped with Python function tools.
-*   **Model Context Protocol (MCP)**: Developed an MCP server in `mcp_server.py` supporting both standard JSON-RPC 2.0 stdin/stdout (used by AI editors like Cursor) and `FastMCP`.
-*   **Security & Guardrails**: Integrated local PII redaction and zero-trust domain inspection to protect user privacy.
-*   **Deployability**: Created a portable bundle consisting of a React/TypeScript frontend and FastAPI backend, deployable locally or inside a Docker container.
-*   **Multimodal Vision & UI**: Implemented Gemini Vision for drag-and-drop OCR of threat screenshots, wrapped in a responsive Cyberpunk 'Premium Dark' UI.
-*   **Agent Skills & CLI**: Implemented `cli.py` to allow terminal users to query threats using `--sample` profiles or `--text` inputs.
+## Safety And Privacy
 
----
+TrustLens is designed around safe handling:
 
-## 🎨 The Vibe Coding Journey
+* It does not click, fetch, or validate suspicious links.
+* Provider keys stay server-side.
+* PII redaction runs before external model enrichment.
+* The UI clearly marks Gemini/OpenRouter live mode versus fallback mode.
+* Local case history stores sanitized reports, not raw OCR text.
 
-Building TrustLens was a testament to the "Vibe Coding" methodology:
-1.  **Planning**: Using natural language prompts, we structured the agent's behavior around user-state situations rather than simple database matching.
-2.  **Iterating on UX**: We designed a dashboard showing a live "Agent Run Timeline". This displays how the agent calls tools step-by-step (e.g., Anonymizing text → Checking domain → Synthesizing risk). This visual audit trail builds trust.
-3.  **Refining**: When TypeScript compilation warnings occurred, we utilized agentic tools to inspect files, edit interfaces, and compile Vite assets.
+## Demo Assets
 
----
+The repo includes safe synthetic fixtures for repeatable demos:
 
-## 🔍 Verification & Demonstration
+* `fixtures/messages/`
+* `fixtures/screenshot_manifest.json`
+* `web/public/fixtures/screenshots/`
 
-### Sample Run Case: DHL Customs Scam SMS
-*   **Input Message**: *"Stimate client DHL, pachetul dvs. are o taxa vamala restanta de 14.99 RON. Va rugam sa platiti imediat pe http://dhl.customs-fee-handling.xyz/portal pentru a evita returnarea."*
-*   **User State**: *Before clicking*
-*   **Agent Trace Output**:
-    1.  `[PII Redaction]` Completed. Sensitive data masked.
-    2.  `[Link Extraction]` Extracted domain: `dhl.customs-fee-handling.xyz`
-    3.  `[Domain Inspection]` Flagged. High-risk layout impersonating DHL.
-    4.  `[Threat Intelligence Check]` Detected urgency ("imediat") and financial requests.
-    5.  `[Risk Synthesis]` Computed Verdict: **HIGH RISK** (Risk Score: 100/100).
-    6.  `[Safety Planner]` Output:
-        *   Do not click link.
-        *   Do not reply to sender.
-        *   Verify independently via DHL official app.
-        *   Block number and delete.
+The screenshot buttons use deterministic OCR markers so the demo behaves consistently whether or not Gemini OCR is configured.
 
-If the user changes their state to **"I already shared my card details"**, the Safety Planner adapts instantly, outputting:
-*   Contact your bank immediately via the number on the back of your card to freeze accounts.
-*   Change passwords and enable 2FA on related services.
-*   Monitor statements for unauthorized transactions.
+## Capstone Concepts Demonstrated
+
+* **Google ADK:** visible coordinator agent definition and tool orchestration.
+* **MCP:** JSON-RPC stdin/stdout MCP server plus runnable proof script.
+* **Multimodal AI:** Gemini Vision OCR path for screenshots.
+* **Hosted LLM option:** OpenRouter Gemma analyst layer.
+* **Guardrails:** local PII redaction, no link fetching, marked fallbacks.
+* **Deployability:** built `web/dist` bundle served by FastAPI, with optional Docker helper.
+* **UX:** Evidence Analytics, Score Trace, Local Case History, compact Case Packet, and browser extension companion.
+
+## Verification
+
+Recommended checks:
+
+```bash
+python -m unittest discover -s tests
+python -m compileall src backend
+cd web && npm run lint && npm run build
+python scripts/mcp_demo.py
+```
+
+## Sample Scenario
+
+Input:
+
+```txt
+DHL: your package has an outstanding customs fee. Pay now at http://dhl.customs-fee-handling.xyz/portal
+```
+
+Output:
+
+* Verdict: High risk.
+* Score Trace: suspicious domain risk, urgency pressure, financial request, and link-plus-pressure escalation.
+* First safe move: do not click the link.
+* Recovery plan: changes depending on whether the user clicked or shared data.
+
+TrustLens is not a link checker. It is a context-aware recovery agent that translates suspicious-message evidence into human-safe next steps.

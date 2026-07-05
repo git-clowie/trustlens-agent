@@ -26,11 +26,46 @@ try:
 except ImportError:
     HAS_GENAI = False
 
+OCR_FIXTURE_TEXTS = {
+    "TRUSTLENS_FIXTURE_BANK": (
+        "BCR Alert: Contul dvs. a fost blocat. Confirmati datele de siguranta "
+        "pe https://bcr-securitate.net/login de urgenta."
+    ),
+    "TRUSTLENS_FIXTURE_COURIER": (
+        "Stimate client Posta Romana, aveti un pachet retinut in depozit. "
+        "Achitati taxa de 9.40 RON pe https://posta-romana-tarife.info pentru livrare."
+    ),
+    "TRUSTLENS_FIXTURE_LOTTERY": (
+        "Felicitari! Ati castigat un voucher de 5000 RON. Confirmati emailul, telefonul "
+        "si CNP-ul la https://google-premii-validare.xyz/claim."
+    ),
+    "TRUSTLENS_FIXTURE_ROMANCE": (
+        "Iubire, am nevoie urgent de 300 EUR pentru viza. Te rog trimite banii astazi "
+        "si nu spune nimanui."
+    ),
+    "TRUSTLENS_FIXTURE_QR": (
+        "Scaneaza codul QR pentru a reactiva contul BT in 10 minute: "
+        "https://bt-login-secure.qr-pay.top"
+    ),
+}
+
+def get_ocr_fixture_text(image_base64: str) -> str | None:
+    """Returns deterministic OCR text for bundled demo screenshot fixtures."""
+    normalized = (image_base64 or "").upper()
+    for marker, text in OCR_FIXTURE_TEXTS.items():
+        if marker in normalized:
+            return text
+    return None
+
 def ocr_screenshot(image_base64: str, mime_type: str) -> str:
     """
     Decodes a base64 message screenshot and transcribes it multimodally
     using Gemini 2.5 Flash.
     """
+    fixture_text = get_ocr_fixture_text(image_base64)
+    if fixture_text:
+        return fixture_text
+
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("[!] No GEMINI_API_KEY set. Using local Mock OCR fallbacks.")
@@ -239,7 +274,7 @@ class TrustLensCoordinatorAgent:
             'detail': 'Drafting security report for authorities...'
         })
         time.sleep(0.3)
-        report_draft = generate_report_draft(raw_message, redacted_text, summary['risk_score'], se_indicators)
+        report_draft = generate_report_draft(raw_message, redacted_text, summary['risk_score'], se_indicators, safe_steps)
         trace[-1]['status'] = 'completed'
         trace[-1]['detail'] = "Authority report draft compiled."
         

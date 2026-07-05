@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TrustLens Companion</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <div>
+          <p class="eyebrow">TrustLens</p>
+          <h1>Pre-click check</h1>
+        </div>
+        <span id="statusDot" class="dot"></span>
+      </header>
+
+      <label for="apiBase">API</label>
+      <input id="apiBase" type="url" placeholder="http://127.0.0.1:8000" />
+
+      <label for="situation">Context</label>
+      <select id="situation">
+        <option value="before_click">Not clicked</option>
+        <option value="clicked_only">Clicked link</option>
+        <option value="compromised">Data shared</option>
+      </select>
+
+      <label for="message">Suspicious text</label>
+      <textarea id="message" rows="7" placeholder="Paste or select suspicious text on a webpage..."></textarea>
+
+      <div class="actions">
+        <button id="analyzeBtn">Analyze</button>
+        <button id="copyBtn" class="secondary">Copy summary</button>
+      </div>
+
+      <section id="result" class="result empty">
+        <p id="statusText">Select text on a page, right-click, then choose Analyze with TrustLens.</p>
+      </section>
+
+      <button id="openDashboard" class="link-button">Open dashboard</button>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

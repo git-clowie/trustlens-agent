@@ -393,7 +393,7 @@ def generate_safe_steps(message_type: str, situation: str) -> list:
         "Report unsolicited requests for personal or financial information to official portals.",
     ]
 
-def generate_report_draft(text: str, redacted_text: str, risk_score: int, indicators: list) -> str:
+def generate_report_draft(text: str, redacted_text: str, risk_score: int, indicators: list, safe_steps: list | None = None) -> str:
     """
     Generates a draft of a security report that can be copied and submitted to anti-phishing
     organizations (like APWG, cert.ro, DNS registrars, or police).
@@ -406,12 +406,16 @@ def generate_report_draft(text: str, redacted_text: str, risk_score: int, indica
             
     threats = [ind['category'] for ind in indicators]
     risk_level = 'HIGH' if risk_score >= 70 else 'MEDIUM' if risk_score >= 35 else 'LOW'
+    first_safe_move = safe_steps[0] if safe_steps else "Use official channels before interacting with the sender or link."
     
-    report = f"""TRUSTLENS INCIDENT SNAPSHOT
+    report = f"""TRUSTLENS CASE PACKET
 Risk: {risk_level} ({risk_score}/100)
 Target brand: {brand.upper()}
 Signals: {', '.join(threats) if threats else 'No common scam signature'}
 Privacy: User identifiers redacted before analysis
+
+First safe move:
+{first_safe_move}
 
 Anonymized suspicious content:
 {redacted_text}

@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source, backend, and static web files
 COPY src/ ./src/
 COPY backend/ ./backend/
+COPY fixtures/ ./fixtures/
+COPY scripts/ ./scripts/
 COPY web/dist/ ./web/dist/
 COPY .env.example .env
 

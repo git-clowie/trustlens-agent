@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="760" viewBox="0 0 420 760" role="img" aria-label="Synthetic courier fee SMS screenshot">
+  <rect width="420" height="760" rx="44" fill="#0f172a"/>
+  <rect x="24" y="24" width="372" height="712" rx="34" fill="#f1f5f9"/>
+  <rect x="24" y="24" width="372" height="92" rx="34" fill="#fde047"/>
+  <text x="54" y="76" font-family="Arial, sans-serif" font-size="27" font-weight="800" fill="#1f2937">Posta Romana</text>
+  <text x="56" y="150" font-family="Arial, sans-serif" font-size="14" fill="#64748b">SMS message</text>
+  <rect x="48" y="174" width="324" height="230" rx="26" fill="#fff"/>
+  <text x="74" y="214" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#111827">Package on hold</text>
+  <text x="74" y="252" font-family="Arial, sans-serif" font-size="16" fill="#334155">Stimate client, coletul dvs.</text>
+  <text x="74" y="280" font-family="Arial, sans-serif" font-size="16" fill="#334155">este retinut in depozit.</text>
+  <text x="74" y="318" font-family="Arial, sans-serif" font-size="16" fill="#334155">Achitati taxa de 9.40 RON</text>
+  <text x="74" y="346" font-family="Arial, sans-serif" font-size="16" fill="#334155">pentru livrare astazi.</text>
+  <rect x="74" y="368" width="250" height="24" rx="12" fill="#fee2e2"/>
+  <text x="88" y="385" font-family="Arial, sans-serif" font-size="12" font-weight="700" fill="#991b1b">posta-romana-tarife.info</text>
+  <rect x="48" y="442" width="324" height="72" rx="20" fill="#0f172a"/>
+  <text x="119" y="486" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#fff">Pay delivery fee</text>
+  <rect x="48" y="548" width="324" height="96" rx="20" fill="#fefce8" stroke="#fde68a"/>
+  <text x="72" y="586" font-family="Arial, sans-serif" font-size="14" fill="#854d0e">Delivery returns automatically</text>
+  <text x="72" y="614" font-family="Arial, sans-serif" font-size="14" fill="#854d0e">if the fee is not paid today.</text>
+  <text x="56" y="690" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">Synthetic TrustLens fixture - safe local asset</text>
+</svg>

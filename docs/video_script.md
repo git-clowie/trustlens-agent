@@ -34,10 +34,10 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ### Scene 3: Multimodal Vision OCR Demo (1:05 - 1:40)
 
-* **Visual on screen:** Press "Analyze Another Message", then click "Bank Screen" or "Courier Screen".
+* **Visual on screen:** Press "Analyze Another Message", then click "Bank Screen", "Courier Screen", "Prize Screen", or "QR Screen".
 * **Action:** Show the "Multimodal Vision OCR" timeline step and the extracted text flowing into the same investigation dashboard.
 * **Voiceover:**
-  > "TrustLens is multimodal. If a user receives a suspicious screenshot instead of text, the backend routes it through Gemini Vision OCR, transcribes the message, and feeds the text into the same safe investigation pipeline. When Gemini is not configured, demo fixtures still use a clearly marked fallback."
+  > "TrustLens is multimodal. If a user receives a suspicious screenshot instead of text, the backend routes it through Gemini Vision OCR, transcribes the message, and feeds the text into the same safe investigation pipeline. The bundled screenshots are safe synthetic fixtures, so the demo stays repeatable with or without Gemini configured."
 
 ---
 
@@ -50,12 +50,12 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ---
 
-### Scene 5: MCP & Technical Architecture (2:20 - 2:50)
+### Scene 5: Extension, MCP & Technical Architecture (2:20 - 2:50)
 
-* **Visual on screen:** Show `trustlens scan --sample bank`, `mcp_server.py`, and the tests.
-* **Action:** Mention the same security tools are available from the web app, CLI, and MCP server.
+* **Visual on screen:** Show the `extension/` folder, then run `python scripts/mcp_demo.py` in a terminal.
+* **Action:** Mention the same security tools are available from the web app, Chrome extension, CLI, and MCP server.
 * **Voiceover:**
-  > "Under the hood, TrustLens uses Google ADK to organize the agent pipeline and exposes its core security tools through an MCP server. The same tool layer powers the web demo, the command-line scanner, and external AI clients."
+  > "Under the hood, TrustLens uses Google ADK to organize the agent pipeline and exposes its core security tools through an MCP server. The companion extension shows how this can protect selected text before a user clicks, while the MCP demo script proves the tool layer works without relying on a specific host client."
 
 ---
 

@@ -1,0 +1,32 @@
+{
+  "fixtures": [
+    {
+      "id": "bank",
+      "label": "Bank security alert",
+      "marker": "TRUSTLENS_FIXTURE_BANK_SCREENSHOT",
+      "web_asset": "/fixtures/screenshots/bank-alert.svg",
+      "expected_verdict": "High"
+    },
+    {
+      "id": "courier",
+      "label": "Courier delivery fee",
+      "marker": "TRUSTLENS_FIXTURE_COURIER_SCREENSHOT",
+      "web_asset": "/fixtures/screenshots/courier-fee.svg",
+      "expected_verdict": "High"
+    },
+    {
+      "id": "lottery",
+      "label": "Prize claim email",
+      "marker": "TRUSTLENS_FIXTURE_LOTTERY_SCREENSHOT",
+      "web_asset": "/fixtures/screenshots/lottery-claim.svg",
+      "expected_verdict": "High"
+    },
+    {
+      "id": "qr",
+      "label": "QR login prompt",
+      "marker": "TRUSTLENS_FIXTURE_QR_SCREENSHOT",
+      "web_asset": "/fixtures/screenshots/qr-login.svg",
+      "expected_verdict": "High"
+    }
+  ]
+}

@@ -80,7 +80,8 @@ TOOL_SCHEMAS = [
                 "text": {"type": "string"},
                 "redacted_text": {"type": "string"},
                 "risk_score": {"type": "integer"},
-                "indicators": {"type": "array"}
+                "indicators": {"type": "array"},
+                "safe_steps": {"type": "array"}
             },
             "required": ["text", "redacted_text", "risk_score", "indicators"]
         }
@@ -106,7 +107,8 @@ def call_tool(tool_name: str, tool_args: dict):
             tool_args.get("text", ""),
             tool_args.get("redacted_text", ""),
             int(tool_args.get("risk_score", 0)),
-            tool_args.get("indicators", [])
+            tool_args.get("indicators", []),
+            tool_args.get("safe_steps", [])
         )
     raise ValueError(f"Unknown tool: {tool_name}")
 
@@ -160,11 +162,11 @@ try:
         return generate_safe_steps(verdict, situation)
         
     @mcp_app.tool()
-    def draft_report(text: str, redacted_text: str, risk_score: int, indicators: list) -> str:
+    def draft_report(text: str, redacted_text: str, risk_score: int, indicators: list, safe_steps: list | None = None) -> str:
         """
         Generates a text incident report suitable for submission to authorities.
         """
-        return generate_report_draft(text, redacted_text, risk_score, indicators)
+        return generate_report_draft(text, redacted_text, risk_score, indicators, safe_steps)
         
     HAS_FAST_MCP = True
 except ImportError:

@@ -19,14 +19,18 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 7. **Privacy-First PII Redaction**: Masks emails, phone numbers, cards, CNPs, and SSNs before external model enrichment.
 8. **Offline Domain Inspection**: Detects typosquatting, brand impersonation, suspicious TLDs, hyphen-heavy domains, and digit-heavy domains without opening links.
 9. **Situation-Aware Safety Planner**: Adjusts next steps for prevention, clicked-link inspection, or compromised-data recovery.
-10. **MCP Tool Server**: Exposes the core scanner tools to MCP-compatible clients.
+10. **Chrome Extension Companion**: Adds a local pre-click browser workflow for selected suspicious text.
+11. **Synthetic Demo Fixtures**: Includes safe screenshot and message fixtures for repeatable recordings.
+12. **MCP Tool Server + Demo Script**: Exposes the core scanner tools to MCP-compatible clients and includes a JSON-RPC proof script.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
   User["User text or screenshot"] --> Web["React Demo Dashboard"]
+  User --> Ext["Chrome Companion Extension"]
   User --> CLI["CLI Scanner"]
+  Ext --> API
   Web --> API["FastAPI Backend"]
   API --> Agent["TrustLensCoordinatorAgent"]
   CLI --> Agent
@@ -158,15 +162,52 @@ Example Claude Desktop configuration:
 }
 ```
 
+Run the bundled MCP proof script without an external MCP host:
+
+```bash
+python scripts/mcp_demo.py
+```
+
+## Chrome Extension Companion
+
+The `extension/` folder contains a Manifest V3 companion extension for the pre-click story:
+
+1. Start the backend with `python backend/run.py`.
+2. Open `chrome://extensions`.
+3. Enable Developer mode.
+4. Load the `extension/` folder as an unpacked extension.
+5. Select suspicious text on a page, right-click, and choose **Analyze with TrustLens**.
+
+The extension calls the configured TrustLens API and stores only local browser state. Provider keys stay server-side.
+
+## Demo Fixtures
+
+Safe synthetic fixtures are included for repeatable demos:
+
+* `fixtures/messages/`
+* `fixtures/screenshot_manifest.json`
+* `web/public/fixtures/screenshots/`
+
+The web dashboard sample screenshot buttons use deterministic OCR fixture markers, so the demo remains stable with or without Gemini configured.
+
+## Optional Docker Helper
+
+The preferred demo path is the FastAPI app plus the built `web/dist` bundle. A lightweight Dockerfile is still included for anyone who wants containerized local hosting:
+
+```bash
+docker build -t trustlens .
+docker run --env-file .env -p 8000:8000 trustlens
+```
+
 ## Capstone Alignment
 
 | Requirement | TrustLens Implementation |
 | :--- | :--- |
 | ADK Agent & Tools | Coordinator pipeline with Python security tools and visible ADK agent definition. |
-| MCP Server | JSON-RPC MCP server exposing PII redaction, link extraction, domain inspection, social engineering detection, scoring, planning, and reporting. |
+| MCP Server | JSON-RPC MCP server exposing PII redaction, link extraction, domain inspection, social engineering detection, scoring, planning, reporting, and a runnable demo script. |
 | Safety & Privacy | Local PII redaction, zero-trust offline domain parsing, no link opening, and marked model fallbacks. |
 | Deployability | Single FastAPI app serving the built React demo, plus Docker-ready files. |
-| User Experience | Evidence analytics, structured score trace, Gemma analyst panel, local case history, export/share controls, and situation-aware recovery steps. |
+| User Experience | Evidence analytics, structured score trace, Gemma analyst panel, local case history, compact case packet, Chrome extension companion, export/share controls, and situation-aware recovery steps. |
 
 ## Verification
 

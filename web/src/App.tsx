@@ -28,6 +28,33 @@ const SAMPLES = {
   }
 };
 
+const SCREENSHOT_FIXTURES = {
+  bank: {
+    label: 'Bank Screen',
+    preview: '/fixtures/screenshots/bank-alert.svg',
+    marker: 'TRUSTLENS_FIXTURE_BANK_SCREENSHOT',
+    situation: 'before_click',
+  },
+  courier: {
+    label: 'Courier Screen',
+    preview: '/fixtures/screenshots/courier-fee.svg',
+    marker: 'TRUSTLENS_FIXTURE_COURIER_SCREENSHOT',
+    situation: 'before_click',
+  },
+  lottery: {
+    label: 'Prize Screen',
+    preview: '/fixtures/screenshots/lottery-claim.svg',
+    marker: 'TRUSTLENS_FIXTURE_LOTTERY_SCREENSHOT',
+    situation: 'before_click',
+  },
+  qr: {
+    label: 'QR Screen',
+    preview: '/fixtures/screenshots/qr-login.svg',
+    marker: 'TRUSTLENS_FIXTURE_QR_SCREENSHOT',
+    situation: 'clicked_only',
+  },
+};
+
 interface TraceStep {
   step: string;
   status: 'running' | 'completed' | 'pending';
@@ -117,6 +144,7 @@ export default function App() {
   const [shareSuccess, setShareSuccess] = useState(false);
   const [caseHistory, setCaseHistory] = useState<CaseRecord[]>([]);
   const [imageFile, setImageFile] = useState<string | null>(null);
+  const [imagePayload, setImagePayload] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
 
   useEffect(() => {
@@ -150,24 +178,24 @@ export default function App() {
     setInputText(sample.text);
     setSituation(sample.situation);
     setImageFile(null);
+    setImagePayload(null);
     setMimeType(null);
     setReport(null);
     setActiveTrace([]);
     handleInvestigate(sample.text, null, null, sample.situation);
   };
 
-  const selectImageSample = (type: 'bank' | 'courier') => {
-    const mockBase64 = type === 'bank' 
-      ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=MOCK_BANK_SCREENSHOT'
-      : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=MOCK_COURIER_SCREENSHOT';
-      
-    setImageFile(mockBase64);
-    setMimeType('image/png');
+  const selectImageSample = (type: keyof typeof SCREENSHOT_FIXTURES) => {
+    const fixture = SCREENSHOT_FIXTURES[type];
+
+    setImageFile(fixture.preview);
+    setImagePayload(fixture.marker);
+    setMimeType('image/svg+xml');
     setInputText('');
-    setSituation('before_click');
+    setSituation(fixture.situation);
     setReport(null);
     setActiveTrace([]);
-    handleInvestigate('', mockBase64, 'image/png', 'before_click');
+    handleInvestigate('', fixture.marker, 'image/svg+xml', fixture.situation);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -184,7 +212,9 @@ export default function App() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImageFile(reader.result as string);
+      const imageData = reader.result as string;
+      setImageFile(imageData);
+      setImagePayload(imageData);
       setInputText('');
     };
     reader.readAsDataURL(file);
@@ -193,6 +223,7 @@ export default function App() {
   const clearImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     setImageFile(null);
+    setImagePayload(null);
     setMimeType(null);
     setInputText('');
   };
@@ -229,6 +260,7 @@ export default function App() {
     setReportSituation(record.situation);
     setInputText(record.report.redacted_text || '');
     setImageFile(null);
+    setImagePayload(null);
     setMimeType(null);
     setActiveTrace(record.report.trace || []);
   };
@@ -249,7 +281,7 @@ export default function App() {
     overrideSituation?: string
   ) => {
     const textToScan = overrideText !== undefined ? overrideText : inputText;
-    const imageToScan = overrideImage !== undefined ? overrideImage : imageFile;
+    const imageToScan = overrideImage !== undefined ? overrideImage : (imagePayload || imageFile);
     const mimeToScan = overrideMime !== undefined ? overrideMime : mimeType;
     const situationToScan = overrideSituation !== undefined ? overrideSituation : situation;
 
@@ -399,8 +431,8 @@ export default function App() {
               {imageFile ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem', gap: '1.5rem', position: 'relative' }}>
                   <img 
-                    src={imageFile.startsWith('data:') ? imageFile : `data:${mimeType};base64,${imageFile}`} 
-                    style={{ maxHeight: '150px', borderRadius: '0.5rem', boxShadow: 'var(--shadow-md)' }} 
+                    src={getImagePreviewSrc(imageFile, mimeType)}
+                    style={{ maxHeight: '190px', maxWidth: '100%', borderRadius: '0.5rem', boxShadow: 'var(--shadow-md)' }}
                     alt="Uploaded threat"
                   />
                   <button 
@@ -471,8 +503,11 @@ export default function App() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('courier')}>DHL SMS</button>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('bank')}>Bank Email</button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('bank')}>Bank Screen</button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('courier')}>Courier Screen</button>
+                {Object.entries(SCREENSHOT_FIXTURES).map(([key, fixture]) => (
+                  <button key={key} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample(key as keyof typeof SCREENSHOT_FIXTURES)}>
+                    {fixture.label}
+                  </button>
+                ))}
               </div>
               </div>
             </div>
@@ -790,6 +825,10 @@ export default function App() {
                     <span>Primary Evidence</span>
                     <strong>{getPrimaryEvidence(report)}</strong>
                   </div>
+                  <div className="report-summary-item">
+                    <span>AI Route</span>
+                    <strong>{getAiRouteLabel(report.ai_analysis)}</strong>
+                  </div>
                 </div>
 
                 <div className="report-chip-row">
@@ -800,13 +839,18 @@ export default function App() {
                   ))}
                 </div>
 
+                <div className="report-action-card">
+                  <span>Next best action</span>
+                  <strong>{report.safe_steps?.[0] || 'Use official channels before interacting.'}</strong>
+                </div>
+
                 <div className="redacted-view report-preview">
                   {report.report_draft}
                 </div>
               </div>
 
               <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <button className="btn btn-secondary" onClick={() => { setReport(null); setInputText(''); setImageFile(null); }}>
+                <button className="btn btn-secondary" onClick={() => { setReport(null); setInputText(''); setImageFile(null); setImagePayload(null); setMimeType(null); }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                   Analyze Another Message
                 </button>
@@ -895,6 +939,11 @@ export default function App() {
 }
 
 // Helper colors
+function getImagePreviewSrc(value: string, mimeType?: string | null) {
+  if (value.startsWith('data:') || value.startsWith('/') || value.startsWith('http')) return value;
+  return `data:${mimeType || 'image/png'};base64,${value}`;
+}
+
 function getSituationLabel(sit: string) {
   if (sit === 'before_click') return 'Prevention (Not Clicked)';
   if (sit === 'clicked_only') return 'Inspection (Clicked Link)';

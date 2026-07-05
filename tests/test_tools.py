@@ -8,6 +8,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from trustlens_agent.tools import (  # noqa: E402
     detect_social_engineering,
     extract_links,
+    generate_report_draft,
     inspect_domain_pattern,
     redact_pii,
     score_risk,
@@ -60,6 +61,19 @@ class TrustLensToolTests(unittest.TestCase):
         self.assertGreaterEqual(len(summary["score_trace"]), 3)
         self.assertEqual(summary["score_trace"][0]["source"], "domain_pattern")
         self.assertTrue(any(item["label"] == "Domain plus persuasion combo" for item in summary["score_trace"]))
+
+    def test_report_draft_includes_first_safe_move(self):
+        report = generate_report_draft(
+            text="raw",
+            redacted_text="redacted",
+            risk_score=90,
+            indicators=[{"category": "Brand Impersonation", "detail": "Claimed source: BT"}],
+            safe_steps=["DO NOT click any link in the message."],
+        )
+
+        self.assertTrue(report.startswith("TRUSTLENS CASE PACKET"))
+        self.assertIn("First safe move:", report)
+        self.assertIn("DO NOT click", report)
 
 
 if __name__ == "__main__":
