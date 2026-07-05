@@ -8,13 +8,13 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - Add a Chrome extension that sends selected SMS/email/web text to the local TrustLens API.
    - This makes the "critical seconds before clicking" story feel real.
 
-2. **Explainable Risk Evidence**
-   - Add an evidence panel that maps each score contribution to the exact domain/text signal.
-   - Example: `+30 suspicious TLD`, `+40 DHL brand in non-official domain`, `+20 urgency pressure`.
+2. **Explainable Risk Evidence** *(implemented in demo build)*
+   - Evidence Analytics now shows link count, maximum domain risk, social hooks, agent trace depth, AI route, and confidence.
+   - The Gemma 4 Analyst panel adds evidence notes and clarifying questions, with a marked deterministic fallback.
 
-3. **Local Case History**
-   - Store anonymized past investigations in local browser storage.
-   - Let users compare repeated campaigns, sender patterns, and domains.
+3. **Local Case History** *(implemented in demo build)*
+   - Stores anonymized past investigations in local browser storage.
+   - Lets users reopen recent cases and compare repeated campaigns, sender patterns, and domains.
 
 4. **Real Screenshot Fixtures**
    - Replace mock base64 screenshot markers with realistic generated SMS/email screenshots.
@@ -36,9 +36,12 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
 
 3. **Scoring Trace Contract**
    - Return a structured score trace from `score_risk`, not just the final score.
-   - The UI can render it as a transparent "why this score happened" audit trail.
+   - The UI already renders higher-level evidence analytics; a backend score-contribution contract would make this even more precise.
 
-4. **Deployment Story**
+4. **Exportable Case Packet** *(implemented in demo build)*
+   - The web UI can copy the full incident draft, copy a short share summary, and export the full JSON case packet.
+
+5. **Deployment Story**
    - Add a one-command Docker demo: `docker build -t trustlens .` then `docker run -p 8000:8000 trustlens`.
    - Include screenshots of the app running from the container.
 
@@ -49,4 +52,3 @@ The strongest framing is:
 > "TrustLens is not a link checker. It is a context-aware recovery agent that translates suspicious-message evidence into human-safe next steps."
 
 That makes it feel more original than another phishing classifier.
-

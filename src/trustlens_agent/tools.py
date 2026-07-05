@@ -335,37 +335,6 @@ def generate_safe_steps(message_type: str, situation: str) -> list:
         "Report unsolicited requests for personal or financial information to official portals.",
     ]
 
-    steps = []
-    
-    if situation == 'before_click':
-        steps = [
-            "⚠️ **DO NOT click any link** in the message.",
-            "❌ **Do not reply** to the sender. Scammers often use replies to verify that a phone number or email is active.",
-            "🔍 **Verify independently**: Go to the official website of the organization (e.g., DHL, ANAF) by typing the URL yourself or using their official app. Check if there are any alerts.",
-            "🗑️ **Report and delete**: Block the sender's phone number or email address, mark it as spam, and delete the message."
-        ]
-    elif situation == 'clicked_only':
-        steps = [
-            "🌐 **Close the browser tab** immediately to stop any active scripts.",
-            "🛡️ **Clear cache & cookies**: Scammers sometimes use session-jacking. Clear your browser data.",
-            "💻 **Run a security scan**: Perform a full system scan using a trusted antivirus/antimalware program on the device used to click the link.",
-            "🚨 **Check downloads**: Inspect your downloads folder for any recently added files (.exe, .dmg, .apk, .zip) that might have downloaded automatically, and delete them without opening."
-        ]
-    elif situation == 'compromised':
-        steps = [
-            "💳 **Contact your bank immediately**: Call the official phone number printed on the back of your credit card. Explain that you entered details on a suspicious site, freeze your cards, and monitor transactions.",
-            "🔑 **Change passwords immediately**: If you entered a password, change it on that service immediately. If you reuse this password elsewhere (e.g., email, bank, social media), change it there too.",
-            "🔒 **Enable Multi-Factor Authentication (MFA)**: Turn on 2FA on your accounts (email, bank, social) to prevent unauthorized logins even if they have your password.",
-            "📈 **Monitor accounts & credit**: Keep a close eye on bank statement charges and check for unexpected registration emails."
-        ]
-    else:
-        steps = [
-            "🔍 Be cautious and avoid interacting with suspicious links or unknown senders.",
-            "🛡️ Report any unsolicited requests for personal or financial information to official portals."
-        ]
-        
-    return steps
-
 def generate_report_draft(text: str, redacted_text: str, risk_score: int, indicators: list) -> str:
     """
     Generates a draft of a security report that can be copied and submitted to anti-phishing

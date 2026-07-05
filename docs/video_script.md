@@ -1,59 +1,66 @@
 # TrustLens Video Demo Script & Guide
 
-A step-by-step production plan and voiceover script to record a professional 2-to-3 minute video demonstration of TrustLens for your Capstone submission.
+A step-by-step production plan and voiceover script to record a professional 2-to-3 minute video demonstration of TrustLens for the Capstone submission.
 
 ---
 
-## 🛠️ Recommended Recording Setup
-*   **Recording Tool:** Use [Loom](https://www.loom.com/) (free and easy) or [OBS Studio](https://obsproject.com/) (high quality).
-*   **Audio:** Use a headset or dedicated microphone in a quiet room.
-*   **Resolution:** Record in full screen (1080p recommended).
+## Recommended Recording Setup
+
+* **Recording Tool:** Loom or OBS Studio.
+* **Audio:** Use a headset or dedicated microphone in a quiet room.
+* **Resolution:** Record in full screen at 1080p.
 
 ---
 
-## 🎬 Video Scene-by-Scene Script
+## Video Scene-by-Scene Script
 
 ### Scene 1: Introduction (0:00 - 0:25)
-*   **Visual on screen:** Open the browser on `http://127.0.0.1:8000`. Show the premium dark landing page with the glowing TrustLens title, MCP Ready badge, and the unified Omnibox.
-*   **Action:** Hover your cursor over the "App Info" button to show the professional modal, then close it.
-*   **Voiceover (Read this):**
-    > "Hello, my name is [Your Name], and this is TrustLens: an AI Security Concierge built on Google's Agent Development Kit and the Model Context Protocol. TrustLens protects users in the critical seconds before they click a malicious link. Let's look at how it works."
+
+* **Visual on screen:** Open `http://127.0.0.1:8000`. Show the premium dark dashboard, clean header, unified Omnibox, and runtime badges in the footer.
+* **Action:** Open the "App Info" modal briefly, then close it.
+* **Voiceover:**
+  > "Hello, my name is [Your Name], and this is TrustLens: an AI Security Concierge built on Google's Agent Development Kit and the Model Context Protocol. TrustLens protects users in the critical seconds before they click a malicious link."
 
 ---
 
-### Scene 2: Text Verification Demo & Auto-Scan (0:25 - 1:00)
-*   **Visual on screen:** Click the **"DHL SMS"** quick sample button. Watch the console automatically fill, trigger the investigation timeline, and run the real-time agent trace animation.
-*   **Action:** Scroll down slowly to show the threat score (100/100), the PII redacted preview, the detected indicators, and the action plan.
-*   **Voiceover (Read this):**
-    > "With our one-click auto-scan, a user simply selects or pastes a message. Here, the agent triggers a multi-step investigation pipeline. It runs local PII redaction, performs zero-trust offline domain pattern matching, and rates the threat. In this case, we have a high-risk score of 100 out of 100 because of impersonated DHL branding, a suspicious top-level domain, and artificial urgency."
+### Scene 2: Text Verification Demo & Auto-Scan (0:25 - 1:05)
+
+* **Visual on screen:** Click the "DHL SMS" quick sample button. Watch the timeline run through PII Redaction, Domain Inspection, Risk Synthesis, Safety Planner, and Gemma 4 Analyst.
+* **Action:** Scroll down slowly to show the threat score, Evidence Analytics, domain audit, Gemma 4 Analyst panel, and contextual action plan.
+* **Voiceover:**
+  > "With one click, TrustLens triggers a multi-step investigation pipeline. It redacts personal data locally, inspects the destination domain without opening it, detects social engineering tactics, scores the risk, and enriches the result with a Gemma 4 analyst layer through OpenRouter when configured. In this DHL sample, the score reaches 100 out of 100 because of brand impersonation, a suspicious top-level domain, and artificial urgency."
 
 ---
 
-### Scene 3: Multimodal Vision OCR Demo (1:00 - 1:40)
-*   **Visual on screen:** Scroll back up. Press "Analyze Another Message". Click the **"📷 Bank Screen"** or **"📷 Courier Screen"** sample button.
-*   **Action:** Watch the timeline start with the "Multimodal Vision OCR" step, decoding the simulated base64 screenshot, and running the analysis.
-*   **Voiceover (Read this):**
-    > "TrustLens is fully multimodal. If a user receives a suspicious image instead of text, they can drag-and-drop or upload a screenshot. Our backend routes this to Gemini Vision OCR, transcribes the message text automatically, and feeds it directly into the threat assessment pipeline—resulting in a clear threat rating and risk breakdown."
+### Scene 3: Multimodal Vision OCR Demo (1:05 - 1:40)
+
+* **Visual on screen:** Press "Analyze Another Message", then click "Bank Screen" or "Courier Screen".
+* **Action:** Show the "Multimodal Vision OCR" timeline step and the extracted text flowing into the same investigation dashboard.
+* **Voiceover:**
+  > "TrustLens is multimodal. If a user receives a suspicious screenshot instead of text, the backend routes it through Gemini Vision OCR, transcribes the message, and feeds the text into the same safe investigation pipeline. When Gemini is not configured, demo fixtures still use a clearly marked fallback."
 
 ---
 
-### Scene 4: Situation-Aware Planning (1:40 - 2:15)
-*   **Visual on screen:** Scroll down to the **"Contextual Action Plan"** section. Point out the "Customized for: Prevention Mode" text.
-*   **Action:** Explain how the advice differs if the user selected "Clicked Link" or "Data Shared" (Recovery mode) on the home screen.
-*   **Voiceover (Read this):**
-    > "The core differentiator of TrustLens is the Contextual Action Plan. Instead of just showing a scary score, it provides a step-by-step recovery guide customized to what the user did. If they haven't clicked, it tells them to delete it. If they shared credentials, it immediately tells them to freeze their bank cards, change passwords, and generates an official pre-formatted incident report ready to send to registrars or authorities."
+### Scene 4: Situation-Aware Planning, Export, and History (1:40 - 2:20)
+
+* **Visual on screen:** Show "Contextual Action Plan", then the Report Draft controls: Copy Report, Copy Summary, and Export JSON.
+* **Action:** Return to the main screen and show Case History with the anonymized saved investigation.
+* **Voiceover:**
+  > "TrustLens does not stop at a scary score. The action plan changes based on what the user already did: not clicked, clicked, or shared data. It can copy a short share summary, export a full JSON case packet, and reopen anonymized local history so repeated scams can be compared safely."
 
 ---
 
-### Scene 5: MCP & Technical Architecture (2:15 - 2:45)
-*   **Visual on screen:** Bring up your terminal showing `trustlens scan --sample bank` or the code structure in your IDE.
-*   **Action:** Show the `mcp_server.py` code briefly.
-*   **Voiceover (Read this):**
-    > "Under the hood, TrustLens is engineered with the Google Agent Development Kit to orchestrate tools. It also exposes its security scanner as a Model Context Protocol (MCP) server. This lets developers mount TrustLens directly inside AI-powered coding environments like Cursor or Claude Desktop to inspect suspicious inputs dynamically."
+### Scene 5: MCP & Technical Architecture (2:20 - 2:50)
+
+* **Visual on screen:** Show `trustlens scan --sample bank`, `mcp_server.py`, and the tests.
+* **Action:** Mention the same security tools are available from the web app, CLI, and MCP server.
+* **Voiceover:**
+  > "Under the hood, TrustLens uses Google ADK to organize the agent pipeline and exposes its core security tools through an MCP server. The same tool layer powers the web demo, the command-line scanner, and external AI clients."
 
 ---
 
-### Scene 6: Outro (2:45 - 3:00)
-*   **Visual on screen:** Go back to the premium dashboard web page.
-*   **Voiceover (Read this):**
-    > "TrustLens bridges the gap between threat analysis and human action, keeping users safe in real time. Thank you for watching."
+### Scene 6: Outro (2:50 - 3:00)
+
+* **Visual on screen:** Return to the dashboard with footer badges showing ADK, MCP, Gemini OCR, and Gemma runtime state.
+* **Voiceover:**
+  > "TrustLens bridges the gap between threat analysis and human action: private by design, explainable by default, and ready for real-world phishing recovery."

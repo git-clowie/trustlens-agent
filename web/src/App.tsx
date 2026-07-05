@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 // API configuration
 const API_BASE = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
+const HISTORY_KEY = 'trustlens_case_history_v1';
 
 // Predefined samples matching backend CLI
 const SAMPLES = {
@@ -79,6 +80,20 @@ interface InvestigationReport {
   extracted_text?: string | null;
 }
 
+interface CaseRecord {
+  id: string;
+  created_at: string;
+  verdict: string;
+  risk_score: number;
+  confidence: number;
+  situation: string;
+  ai_route: string;
+  domain_count: number;
+  indicator_count: number;
+  text_preview: string;
+  report: InvestigationReport;
+}
+
 export default function App() {
   const [inputText, setInputText] = useState('');
   const [situation, setSituation] = useState('before_click');
@@ -89,8 +104,19 @@ export default function App() {
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
   const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false, openRouter: false, model: '' });
   const [copySuccess, setCopySuccess] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
+  const [caseHistory, setCaseHistory] = useState<CaseRecord[]>([]);
   const [imageFile, setImageFile] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(HISTORY_KEY);
+      if (saved) setCaseHistory(JSON.parse(saved).slice(0, 8));
+    } catch {
+      setCaseHistory([]);
+    }
+  }, []);
 
   // Load health check on mount
   useEffect(() => {
@@ -161,6 +187,51 @@ export default function App() {
     setInputText('');
   };
 
+  const persistCase = (data: InvestigationReport, situationValue: string) => {
+    const storedReport = sanitizeReportForHistory(data);
+    const record: CaseRecord = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      created_at: new Date().toISOString(),
+      verdict: storedReport.verdict,
+      risk_score: storedReport.risk_score,
+      confidence: storedReport.confidence,
+      situation: situationValue,
+      ai_route: getAiRouteLabel(storedReport.ai_analysis),
+      domain_count: storedReport.domain_reports?.length || 0,
+      indicator_count: storedReport.social_engineering_indicators?.length || 0,
+      text_preview: (storedReport.redacted_text || 'Screenshot analysis').slice(0, 140),
+      report: storedReport,
+    };
+
+    setCaseHistory((prev) => {
+      const next = [record, ...prev].slice(0, 8);
+      try {
+        window.localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      } catch {
+        // Local history is a demo convenience; investigation results should still render.
+      }
+      return next;
+    });
+  };
+
+  const openCase = (record: CaseRecord) => {
+    setReport(record.report);
+    setReportSituation(record.situation);
+    setInputText(record.report.redacted_text || '');
+    setImageFile(null);
+    setMimeType(null);
+    setActiveTrace(record.report.trace || []);
+  };
+
+  const clearHistory = () => {
+    setCaseHistory([]);
+    try {
+      window.localStorage.removeItem(HISTORY_KEY);
+    } catch {
+      // Ignore localStorage restrictions in private or locked-down browsers.
+    }
+  };
+
   const handleInvestigate = async (
     overrideText?: string,
     overrideImage?: string | null,
@@ -178,6 +249,7 @@ export default function App() {
     setReport(null);
     setReportSituation(situationToScan);
     setCopySuccess(false);
+    setShareSuccess(false);
 
     // Initialize visual trace
     const initialTrace: TraceStep[] = [];
@@ -229,6 +301,7 @@ export default function App() {
 
       await new Promise((resolve) => setTimeout(resolve, 200));
       setReport(data);
+      persistCase(data, situationToScan);
     } catch (err) {
       console.error(err);
       setActiveTrace((prev) => {
@@ -249,6 +322,32 @@ export default function App() {
     navigator.clipboard.writeText(report.report_draft);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const handleCopySummary = () => {
+    if (!report) return;
+    navigator.clipboard.writeText(buildShareSummary(report, reportSituation));
+    setShareSuccess(true);
+    setTimeout(() => setShareSuccess(false), 2000);
+  };
+
+  const handleExportJson = () => {
+    if (!report) return;
+
+    const payload = {
+      exported_at: new Date().toISOString(),
+      app: 'TrustLens Agent',
+      situation: reportSituation,
+      ai_route: getAiRouteLabel(report.ai_analysis),
+      report,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `trustlens-case-${Date.now()}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   // State machine derivation
@@ -280,10 +379,11 @@ export default function App() {
         
         {/* IDLE STATE (HERO) */}
         {appState === 'idle' && (
-          <div className="panel" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-            <h3 className="panel-title" style={{ justifyContent: 'center', fontSize: '1.5rem', marginBottom: '2rem' }}>
-              Analyze a Suspicious Message
-            </h3>
+          <>
+            <div className="panel" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+              <h3 className="panel-title" style={{ justifyContent: 'center', fontSize: '1.5rem', marginBottom: '2rem' }}>
+                Analyze a Suspicious Message
+              </h3>
             
             <div className="omnibox" style={{ position: 'relative', borderRadius: '12px', border: '1px solid var(--panel-border)', background: 'rgba(0,0,0,0.3)', overflow: 'hidden', transition: 'all 0.3s', marginBottom: '1.5rem', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
               {imageFile ? (
@@ -364,8 +464,52 @@ export default function App() {
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('bank')}>Bank Screen</button>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('courier')}>Courier Screen</button>
               </div>
+              </div>
             </div>
-          </div>
+
+            {caseHistory.length > 0 && (
+              <div className="panel" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <h3 className="panel-title" style={{ marginBottom: 0 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-8"/></svg>
+                    Case History
+                  </h3>
+                  <button className="btn btn-secondary" onClick={clearHistory} style={{ padding: '0.5rem 0.85rem', fontSize: '0.75rem' }}>
+                    Clear
+                  </button>
+                </div>
+                <div className="info-list">
+                  {caseHistory.map((item) => (
+                    <button
+                      key={item.id}
+                      className="info-item"
+                      onClick={() => openCase(item)}
+                      style={{ width: '100%', textAlign: 'left', cursor: 'pointer', color: 'var(--text-primary)' }}
+                    >
+                      <span style={{ width: '4px', alignSelf: 'stretch', borderRadius: '999px', background: getScoreColor(item.risk_score), flexShrink: 0 }}></span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', alignItems: 'center', marginBottom: '0.4rem' }}>
+                          <strong style={{ fontFamily: 'var(--font-mono)', color: getScoreColor(item.risk_score), fontSize: '0.85rem' }}>
+                            {item.verdict} / {item.risk_score}
+                          </strong>
+                          <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>
+                            {formatCaseTime(item.created_at)}
+                          </span>
+                        </div>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.86rem', overflowWrap: 'anywhere' }}>{item.text_preview}</p>
+                        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.6rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>
+                          <span>{getSituationLabel(item.situation)}</span>
+                          <span>{item.domain_count} domains</span>
+                          <span>{item.indicator_count} signals</span>
+                          <span>{item.ai_route}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* ANALYZING STATE (LOADING) */}
@@ -418,6 +562,22 @@ export default function App() {
                 <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
                   {report.verdict} Threat
                 </div>
+              </div>
+            </div>
+
+            <div className="panel full-width">
+              <h3 className="panel-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9"/><path d="M12 16V5"/><path d="M17 16v-3"/></svg>
+                Evidence Analytics
+              </h3>
+              <div className="metric-grid">
+                {getEvidenceStats(report).map((stat) => (
+                  <div key={stat.label} className="metric-item">
+                    <span className="metric-label">{stat.label}</span>
+                    <strong className="metric-value" style={{ color: stat.color }}>{stat.value}</strong>
+                    <span className="metric-note">{stat.note}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -569,14 +729,22 @@ export default function App() {
               )}
 
               <div className="panel">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem', flexWrap: 'wrap' }}>
                   <h3 className="panel-title" style={{ marginBottom: 0 }}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     Report Draft
                   </h3>
-                  <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
-                    {copySuccess ? 'Copied!' : 'Copy to Clipboard'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                      {copySuccess ? 'Copied!' : 'Copy Report'}
+                    </button>
+                    <button className="btn btn-secondary" onClick={handleCopySummary} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                      {shareSuccess ? 'Copied!' : 'Copy Summary'}
+                    </button>
+                    <button className="btn btn-secondary" onClick={handleExportJson} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                      Export JSON
+                    </button>
+                  </div>
                 </div>
                 <div className="redacted-view" style={{ background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
                   {report.report_draft}
@@ -696,6 +864,88 @@ function getAiRouteLabel(ai?: AiAnalysis) {
   if (!ai) return 'Local TrustLens Rules';
   if (ai.fallback_used) return 'Local TrustLens Fallback';
   return `${ai.provider} / ${ai.model}`;
+}
+
+function sanitizeReportForHistory(report: InvestigationReport): InvestigationReport {
+  const redactedText = report.redacted_text || '[REDACTED_SCREENSHOT_TEXT]';
+
+  return {
+    ...report,
+    redacted_text: redactedText,
+    extracted_text: null,
+    links: report.links?.map((link) => ({
+      domain: link.domain,
+      original: link.domain,
+    })) || [],
+  };
+}
+
+function getEvidenceStats(report: InvestigationReport) {
+  const maxDomainRisk = report.domain_reports?.reduce((max, item) => Math.max(max, item.risk_score), 0) || 0;
+  const highDomains = report.domain_reports?.filter((item) => item.verdict === 'High').length || 0;
+  const aiLive = report.ai_analysis && !report.ai_analysis.fallback_used;
+
+  return [
+    {
+      label: 'Links',
+      value: String(report.links?.length || 0),
+      note: `${highDomains} high-risk domains`,
+      color: maxDomainRisk >= 70 ? 'var(--color-danger)' : maxDomainRisk >= 35 ? 'var(--color-warning)' : 'var(--color-safe)',
+    },
+    {
+      label: 'Max Domain Risk',
+      value: `${maxDomainRisk}/100`,
+      note: 'offline domain pattern score',
+      color: getScoreColor(maxDomainRisk),
+    },
+    {
+      label: 'Social Hooks',
+      value: String(report.social_engineering_indicators?.length || 0),
+      note: 'urgency, money, brand, data prompts',
+      color: report.social_engineering_indicators?.length >= 3 ? 'var(--color-danger)' : 'var(--color-warning)',
+    },
+    {
+      label: 'Agent Trace',
+      value: String(report.trace?.length || 0),
+      note: 'auditable pipeline steps',
+      color: 'var(--accent-primary)',
+    },
+    {
+      label: 'AI Analyst',
+      value: aiLive ? 'Live' : 'Fallback',
+      note: getAiRouteLabel(report.ai_analysis),
+      color: aiLive ? 'var(--accent-primary)' : 'var(--color-warning)',
+    },
+    {
+      label: 'Confidence',
+      value: `${report.confidence}%`,
+      note: 'combined evidence confidence',
+      color: getScoreColor(report.risk_score),
+    },
+  ];
+}
+
+function buildShareSummary(report: InvestigationReport, situation: string) {
+  const domains = report.domain_reports?.map((item) => `${item.domain} (${item.risk_score}/100)`).join(', ') || 'none';
+  const actions = report.safe_steps?.slice(0, 3).map((step, idx) => `${idx + 1}. ${step}`).join('\n') || 'No actions generated.';
+
+  return [
+    `TrustLens threat summary`,
+    `Verdict: ${report.verdict} (${report.risk_score}/100), confidence ${report.confidence}%`,
+    `Context: ${getSituationLabel(situation)}`,
+    `AI route: ${getAiRouteLabel(report.ai_analysis)}`,
+    `Domains: ${domains}`,
+    `Signals: ${report.breakdown.join('; ')}`,
+    ``,
+    `Recommended next actions:`,
+    actions,
+  ].join('\n');
+}
+
+function formatCaseTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Saved case';
+  return date.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function getStepIcon(stepText: string) {
