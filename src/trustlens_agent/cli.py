@@ -81,7 +81,7 @@ def main():
         reset_code = "\033[0m"
         
         print(f"  Risk Level: {color_code}{report['verdict'].upper()}{reset_code}")
-        print(f"  Threat Score: {report['risk_score']}/100")
+        print(f"  Risk Score: {report['risk_score']}/100")
         print("  Detected Signatures:")
         for desc in report['breakdown']:
             print(f"    - {desc}")

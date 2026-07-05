@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
 // API configuration
-const API_BASE = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
+declare global {
+  interface Window {
+    TRUSTLENS_CONFIG?: {
+      API_BASE?: string;
+    };
+  }
+}
+
+const configuredApiBase = window.TRUSTLENS_CONFIG?.API_BASE || import.meta.env.VITE_API_BASE || '';
+const API_BASE = normalizeApiBase(configuredApiBase || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''));
 const HISTORY_KEY = 'trustlens_case_history_v1';
 
 // Predefined samples matching backend CLI
@@ -139,7 +148,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [report, setReport] = useState<InvestigationReport | null>(null);
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
-  const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false, openRouter: false, model: '' });
+  const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false, openRouter: false, model: '', apiReachable: false });
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [caseHistory, setCaseHistory] = useState<CaseRecord[]>([]);
@@ -159,16 +168,21 @@ export default function App() {
   // Load health check on mount
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Health check failed.');
+        return res.json();
+      })
       .then((data) => {
         setHealthStatus({
           adk: data.adk_available,
           keySet: data.api_key_set,
           openRouter: data.openrouter_key_set,
-          model: data.openrouter_model || 'google/gemma-4-31b-it:free'
+          model: data.openrouter_model || 'google/gemma-4-31b-it:free',
+          apiReachable: true
         });
       })
       .catch(() => {
+        setHealthStatus((prev) => ({ ...prev, apiReachable: false }));
         console.warn("Could not reach backend health endpoint. Using local fallbacks.");
       });
   }, []);
@@ -307,7 +321,7 @@ export default function App() {
       { step: 'Threat Intelligence Check', status: 'pending', detail: 'Waiting to review social engineering heuristics...' },
       { step: 'Risk Synthesis', status: 'pending', detail: 'Waiting to compile risk score...' },
       { step: 'Safety Planner', status: 'pending', detail: 'Waiting to assemble recommendations...' },
-      { step: 'Gemma 4 Analyst', status: 'pending', detail: 'Waiting to enrich the evidence summary...' },
+      { step: 'Gemma Analyst', status: 'pending', detail: 'Waiting to enrich the evidence summary...' },
       { step: 'Incident Report Generator', status: 'pending', detail: 'Waiting to draft incident documentation...' },
       { step: 'Safety Review Guardrail', status: 'pending', detail: 'Waiting for guardrail validation...' }
     );
@@ -350,7 +364,7 @@ export default function App() {
         const next = [...prev];
         const activeIdx = next.findIndex(s => s.status === 'running' || s.status === 'pending');
         if (activeIdx !== -1) {
-          next[activeIdx] = { step: 'Error', status: 'pending', detail: 'Server did not respond or API Key is missing.' };
+          next[activeIdx] = { step: 'Error', status: 'pending', detail: 'API is unreachable or not configured.' };
         }
         return next;
       });
@@ -494,7 +508,7 @@ export default function App() {
               disabled={!inputText.trim() && !imageFile}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              Analyze Threat
+              Analyze Message
             </button>
 
             {/* Quick Samples */}
@@ -598,14 +612,14 @@ export default function App() {
             <div className="panel full-width">
               <div className="verdict-header">
                 <div>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Investigation Complete</h2>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>Confidence Index: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: 0 }}>Investigation Complete</h2>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>Evidence Confidence: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.35rem', fontFamily: 'var(--font-mono)' }}>
-                    AI Route: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong>
+                    AI Analyst: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong>
                   </p>
                 </div>
                 <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
-                  {report.verdict} Threat
+                  {report.verdict} Risk
                 </div>
               </div>
             </div>
@@ -653,14 +667,14 @@ export default function App() {
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                   Risk Assessment
                 </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
                   <div className="gauge-container">
                     <svg width="160" height="160" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--panel-bg-hover)" strokeWidth="3" />
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="3.2" strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s ease-out' }} />
                     </svg>
                     <div className="gauge-val" style={{ color: getScoreColor(report.risk_score) }}>
-                      {report.risk_score}<span>Score</span>
+                      {report.risk_score}<span>Risk Score</span>
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
@@ -741,10 +755,10 @@ export default function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
                     <h3 className="panel-title" style={{ marginBottom: 0 }}>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
-                      Gemma 4 Analyst
+                      Gemma Analyst
                     </h3>
                     <span className="badge" style={{ color: report.ai_analysis.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)', flexShrink: 0 }}>
-                      {report.ai_analysis.fallback_used ? 'Fallback' : 'OpenRouter'}
+                      {report.ai_analysis.fallback_used ? 'Local Fallback' : 'Live'}
                     </span>
                   </div>
 
@@ -826,7 +840,7 @@ export default function App() {
                     <strong>{getPrimaryEvidence(report)}</strong>
                   </div>
                   <div className="report-summary-item">
-                    <span>AI Route</span>
+                    <span>AI Analyst</span>
                     <strong>{getAiRouteLabel(report.ai_analysis)}</strong>
                   </div>
                 </div>
@@ -896,7 +910,7 @@ export default function App() {
               <strong style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>System Architecture</strong>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>
                 <span>Gemini Vision OCR</span>
-                <span>OpenRouter Gemma 4</span>
+                <span>OpenRouter Gemma Analyst</span>
                 <span>Google ADK</span>
                 <span>MCP Tool Server</span>
                 <span>Local Guardrails</span>
@@ -914,20 +928,24 @@ export default function App() {
       <footer style={{ marginTop: '4rem', padding: '2rem 1rem 3rem 1rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
           <div className="badge">
+            <span className={`status-dot ${healthStatus.apiReachable ? 'active' : 'inactive'}`}></span>
+            API: {healthStatus.apiReachable ? 'Connected' : 'Disconnected'}
+          </div>
+          <div className="badge">
             <span className="status-dot active"></span>
-            MCP Ready
+            MCP Tools: Implemented
           </div>
           <div className="badge" title={healthStatus.model || 'OpenRouter model'}>
             <span className={`status-dot ${healthStatus.openRouter ? 'active' : 'inactive'}`}></span>
-            Gemma: {healthStatus.openRouter ? 'Live' : 'Fallback'}
+            Gemma Analyst: {healthStatus.openRouter ? 'Live' : 'Local Fallback'}
           </div>
           <div className="badge">
             <span className={`status-dot ${healthStatus.keySet ? 'active' : 'inactive'}`}></span>
-            Gemini OCR: {healthStatus.keySet ? 'Live' : 'Fallback'}
+            Gemini OCR: {healthStatus.keySet ? 'Live' : 'Fixture Fallback'}
           </div>
           <div className="badge">
             <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
-            ADK: {healthStatus.adk ? 'Active' : 'Standby'}
+            ADK Agent: {healthStatus.adk ? 'Active' : 'Tool Fallback'}
           </div>
         </div>
         <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
@@ -939,6 +957,10 @@ export default function App() {
 }
 
 // Helper colors
+function normalizeApiBase(value: string) {
+  return value.replace(/\/+$/, '');
+}
+
 function getImagePreviewSrc(value: string, mimeType?: string | null) {
   if (value.startsWith('data:') || value.startsWith('/') || value.startsWith('http')) return value;
   return `data:${mimeType || 'image/png'};base64,${value}`;
@@ -964,9 +986,9 @@ function getPriorityColor(priority: string) {
 }
 
 function getAiRouteLabel(ai?: AiAnalysis) {
-  if (!ai) return 'Local TrustLens Rules';
-  if (ai.fallback_used) return 'Local TrustLens Fallback';
-  return `${ai.provider} / ${ai.model}`;
+  if (!ai) return 'Local Rules';
+  if (ai.fallback_used) return 'Local Fallback';
+  return 'Live Gemma Analyst';
 }
 
 function getTraceColor(item: ScoreTraceItem) {
@@ -1056,10 +1078,10 @@ function buildShareSummary(report: InvestigationReport, situation: string) {
   const actions = report.safe_steps?.slice(0, 3).map((step, idx) => `${idx + 1}. ${step}`).join('\n') || 'No actions generated.';
 
   return [
-    `TrustLens threat summary`,
+    `TrustLens risk summary`,
     `Verdict: ${report.verdict} (${report.risk_score}/100), confidence ${report.confidence}%`,
     `Context: ${getSituationLabel(situation)}`,
-    `AI route: ${getAiRouteLabel(report.ai_analysis)}`,
+    `AI analyst: ${getAiRouteLabel(report.ai_analysis)}`,
     `Domains: ${domains}`,
     `Signals: ${report.breakdown.join('; ')}`,
     `Score trace: ${topEvidence}`,

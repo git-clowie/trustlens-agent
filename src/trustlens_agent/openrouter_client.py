@@ -12,7 +12,7 @@ OPENROUTER_MODEL_FALLBACKS = (
 )
 OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions"
 
-SYSTEM_PROMPT = """You are TrustLens Gemma 4 Analyst, a phishing safety analyst.
+SYSTEM_PROMPT = """You are TrustLens Gemma Analyst, a phishing safety analyst.
 Use only the supplied redacted evidence and structured signals.
 Do not ask the user to open links, validate credentials, call suspicious senders, or paste secrets.
 Return JSON only with these keys:
@@ -162,7 +162,7 @@ def _offline_analysis(
         "status": "fallback",
         "fallback_reason": reason,
         "executive_summary": f"TrustLens classified this as {verdict} risk ({risk_score}/100) using local rules.",
-        "user_explanation": "Gemma 4 enrichment is unavailable, so this explanation is generated from deterministic TrustLens evidence.",
+        "user_explanation": "Gemma analyst enrichment is unavailable, so this explanation is generated from deterministic TrustLens evidence.",
         "recommended_priority": priority,
         "evidence": evidence,
         "questions": questions_by_situation.get(situation, [])[:3],

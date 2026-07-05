@@ -11,9 +11,9 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 ## Key Features
 
 1. **Multimodal Vision OCR**: Screenshot messages can be transcribed with Gemini Vision before analysis.
-2. **OpenRouter Gemma 4 Analyst**: Optional hosted Gemma enrichment adds plain-language explanation, evidence notes, clarifying questions, and action priority.
+2. **OpenRouter Gemma Analyst**: Optional hosted Gemma enrichment adds plain-language explanation, evidence notes, clarifying questions, and action priority.
 3. **Marked Fallback Mode**: If Gemini or OpenRouter is unavailable, TrustLens uses deterministic fallbacks and clearly labels them.
-4. **Evidence Analytics + Score Trace**: Shows link count, maximum domain risk, social hooks, AI route, confidence, trace depth, and structured score contributions.
+4. **Evidence Analytics + Score Trace**: Shows link count, maximum domain risk, social hooks, AI analyst status, confidence, trace depth, and structured score contributions.
 5. **Local Case History**: Stores anonymized investigations in browser localStorage so users can reopen recent cases.
 6. **Compact Case Packet**: Shows a balanced reporting snapshot with risk, context, primary evidence, top score contributors, copy summary, and JSON export.
 7. **Privacy-First PII Redaction**: Masks emails, phone numbers, cards, CNPs, and SSNs before external model enrichment.
@@ -41,7 +41,7 @@ flowchart TD
   Agent --> Score["score_risk + score_trace"]
   Agent --> Steps["generate_safe_steps"]
   Agent --> Report["generate_report_draft"]
-  Agent --> Gemma["OpenRouter Gemma 4 Analyst"]
+  Agent --> Gemma["OpenRouter Gemma Analyst"]
   Agent --> OCR["Gemini Vision OCR"]
   Agent --> MCP["MCP Tool Server"]
 ```
@@ -88,7 +88,7 @@ TrustLens keeps provider keys server-side.
 | Capability | Provider | Env var | Fallback |
 | :--- | :--- | :--- | :--- |
 | Screenshot OCR | Gemini 2.5 Flash | `GEMINI_API_KEY` | Safe demo OCR fixtures |
-| Analyst enrichment | OpenRouter Gemma 4 | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Deterministic evidence summary |
+| Analyst enrichment | OpenRouter Gemma | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Deterministic evidence summary |
 
 The React client never receives provider keys. It calls the FastAPI backend and displays whether Gemini/OpenRouter are live or in fallback mode.
 
@@ -103,6 +103,26 @@ npm run dev
 ```
 
 The Vite dev server connects to the FastAPI backend on port 8000.
+
+## Static Demo Hosting
+
+`npm run build` copies `web/public/config.js` into `web/dist/config.js`. Keep it empty when FastAPI serves the frontend from the same origin:
+
+```js
+window.TRUSTLENS_CONFIG = {
+  API_BASE: ""
+};
+```
+
+For simple static hosting with a separate backend, edit the built `web/dist/config.js` after upload:
+
+```js
+window.TRUSTLENS_CONFIG = {
+  API_BASE: "https://your-trustlens-api.example.com"
+};
+```
+
+Gemini and OpenRouter keys must remain on the backend. The static frontend only stores the public API base URL.
 
 ## CLI Scanner
 

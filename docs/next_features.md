@@ -57,7 +57,7 @@ Scope:
 * Show live/fallback status.
 * Add a "run offline demo mode" toggle that only changes UI/sample behavior, not server secrets.
 
-## 6. Static Hosting Adapter
+## 6. Static Hosting Adapter *(implemented)*
 
 Goal: make a purely static public demo possible without exposing provider keys.
 
@@ -66,3 +66,4 @@ Scope:
 * Add a configurable hosted API base URL.
 * Show a clear "API disconnected" state when static hosting has no backend.
 * Keep OpenRouter and Gemini keys only on a server-side endpoint.
+* Implemented through `web/public/config.js`, copied to `web/dist/config.js` during build.

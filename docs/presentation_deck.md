@@ -40,7 +40,7 @@ Visual: Evidence Analytics, Score Trace, and compact Case Packet.
 
 Points:
 
-* Evidence Analytics summarizes links, domain risk, social hooks, AI route, confidence, and trace depth.
+* Evidence Analytics summarizes links, domain risk, social hooks, AI analyst status, confidence, and trace depth.
 * Score Trace shows structured score contributions.
 * Case Packet gives a compact reporting snapshot with first safe move, top contributors, copy summary, and JSON export.
 
@@ -66,7 +66,7 @@ Points:
 * MCP stdin/stdout server plus `scripts/mcp_demo.py`.
 * Privacy guardrails with local PII redaction.
 * CLI scanner and browser extension companion.
-* Built `web/dist` demo bundle, optional Docker helper, and docs.
+* Built `web/dist` demo bundle, runtime static-hosting config, optional Docker helper, and docs.
 
 ## Slide 7: Close
 

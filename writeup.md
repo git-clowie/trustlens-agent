@@ -27,7 +27,7 @@ TrustLens is built as a code-first agentic pipeline:
 5. **Social Engineering Detection:** finds urgency, money pressure, brand claims, and credential prompts.
 6. **Risk Synthesis:** returns verdict, confidence, breakdown, and structured `score_trace`.
 7. **Safety Planner:** creates next steps based on the user's current state.
-8. **Gemma 4 Analyst:** optionally enriches the explanation through OpenRouter, with a marked local fallback.
+8. **Gemma Analyst:** optionally enriches the explanation through OpenRouter, with a marked local fallback.
 9. **Case Packet:** generates a compact reporting snapshot with first safe move and anonymized content.
 
 ## Interfaces
@@ -67,7 +67,7 @@ The screenshot buttons use deterministic OCR markers so the demo behaves consist
 * **Multimodal AI:** Gemini Vision OCR path for screenshots.
 * **Hosted LLM option:** OpenRouter Gemma analyst layer.
 * **Guardrails:** local PII redaction, no link fetching, marked fallbacks.
-* **Deployability:** built `web/dist` bundle served by FastAPI, with optional Docker helper.
+* **Deployability:** built `web/dist` bundle served by FastAPI, runtime `config.js` for static hosting, and optional Docker helper.
 * **UX:** Evidence Analytics, Score Trace, Local Case History, compact Case Packet, and browser extension companion.
 
 ## Verification

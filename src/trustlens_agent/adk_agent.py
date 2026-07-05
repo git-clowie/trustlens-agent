@@ -246,11 +246,11 @@ class TrustLensCoordinatorAgent:
         trace[-1]['status'] = 'completed'
         trace[-1]['detail'] = f"Custom safety steps generated successfully ({len(safe_steps)} recommendations)."
 
-        # 7. Optional OpenRouter / Gemma 4 analyst enrichment
+        # 7. Optional OpenRouter / Gemma analyst enrichment
         trace.append({
-            'step': 'Gemma 4 Analyst',
+            'step': 'Gemma Analyst',
             'status': 'running',
-            'detail': 'Generating a human-readable security explanation via OpenRouter Gemma 4 when configured...'
+            'detail': 'Generating a human-readable security explanation via OpenRouter Gemma when configured...'
         })
         time.sleep(0.3)
         ai_analysis = generate_gemma_analysis(
@@ -263,9 +263,9 @@ class TrustLensCoordinatorAgent:
         )
         trace[-1]['status'] = 'completed'
         if ai_analysis.get('fallback_used'):
-            trace[-1]['detail'] = 'Gemma 4 enrichment unavailable. Deterministic TrustLens explanation attached.'
+            trace[-1]['detail'] = 'Gemma enrichment unavailable. Deterministic TrustLens explanation attached.'
         else:
-            trace[-1]['detail'] = f"Gemma 4 enrichment completed via {ai_analysis.get('model', 'OpenRouter')}."
+            trace[-1]['detail'] = f"Gemma enrichment completed via {ai_analysis.get('model', 'OpenRouter')}."
         
         # 8. Automated Incident Reporting Step
         trace.append({

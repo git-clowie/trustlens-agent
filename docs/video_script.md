@@ -25,10 +25,10 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ### Scene 2: Text Verification Demo & Auto-Scan (0:25 - 1:05)
 
-* **Visual on screen:** Click the "DHL SMS" quick sample button. Watch the timeline run through PII Redaction, Domain Inspection, Risk Synthesis, Safety Planner, and Gemma 4 Analyst.
-* **Action:** Scroll down slowly to show the threat score, Evidence Analytics, Score Trace, domain audit, Gemma 4 Analyst panel, and contextual action plan.
+* **Visual on screen:** Click the "DHL SMS" quick sample button. Watch the timeline run through PII Redaction, Domain Inspection, Risk Synthesis, Safety Planner, and Gemma Analyst.
+* **Action:** Scroll down slowly to show the risk score, Evidence Analytics, Score Trace, domain audit, Gemma Analyst panel, and contextual action plan.
 * **Voiceover:**
-  > "With one click, TrustLens triggers a multi-step investigation pipeline. It redacts personal data locally, inspects the destination domain without opening it, detects social engineering tactics, scores the risk, and enriches the result with a Gemma 4 analyst layer through OpenRouter when configured. In this DHL sample, the score reaches 100 out of 100 because of brand impersonation, a suspicious top-level domain, and artificial urgency."
+  > "With one click, TrustLens triggers a multi-step investigation pipeline. It redacts personal data locally, inspects the destination domain without opening it, detects social engineering tactics, scores the risk, and enriches the result with a Gemma analyst layer through OpenRouter when configured. In this DHL sample, the score reaches 100 out of 100 because of brand impersonation, a suspicious top-level domain, and artificial urgency."
 
 ---
 

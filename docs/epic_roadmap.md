@@ -9,8 +9,8 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - This makes the "critical seconds before clicking" story feel real.
 
 2. **Explainable Risk Evidence** *(implemented in demo build)*
-   - Evidence Analytics now shows link count, maximum domain risk, social hooks, agent trace depth, AI route, confidence, and structured score trace contributions.
-   - The Gemma 4 Analyst panel adds evidence notes and clarifying questions, with a marked deterministic fallback.
+   - Evidence Analytics now shows link count, maximum domain risk, social hooks, agent trace depth, AI analyst status, confidence, and structured score trace contributions.
+   - The Gemma Analyst panel adds evidence notes and clarifying questions, with a marked deterministic fallback.
 
 3. **Local Case History** *(implemented in demo build)*
    - Stores anonymized past investigations in local browser storage.
@@ -44,6 +44,7 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
 5. **Deployment Story** *(helper prepared)*
    - Dockerfile and `.dockerignore` are included for optional containerized local hosting.
    - Primary demo handoff remains the built `web/dist` bundle served by the FastAPI app.
+   - Static hosting can point to a separate backend by editing `web/dist/config.js` after build.
 
 ## Presentation Angle
 
