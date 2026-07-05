@@ -8,17 +8,17 @@ const SAMPLES = {
   courier: {
     source: 'SMS',
     situation: 'before_click',
-    text: 'Stimate client DHL, pachetul dvs. are o taxa vamala restanta de 14.99 RON. Va rugam sa platiti imediat pe http://dhl.customs-fee-handling.xyz/portal pentru a evita returnarea.'
+    text: 'Dear DHL customer, your package has an outstanding customs fee of 14.99 RON. Please pay immediately at http://dhl.customs-fee-handling.xyz/portal to avoid return.'
   },
   bank: {
     source: 'SMS',
     situation: 'before_click',
-    text: 'Banca Transilvania: Contul dumneavoastra a fost temporar restrictionat. Autentificati-va urgent pe https://bt-verificare-securizata.today/login pentru deblocare in 24 de ore.'
+    text: 'Banca Transilvania: Your account has been temporarily restricted. Log in urgently at https://bt-verificare-securizata.today/login to unlock it within 24 hours.'
   },
   lottery: {
     source: 'Email',
     situation: 'before_click',
-    text: 'Dear winner! Your email john.doe@gmail.com won $50,000 in Google Anniversary Promo. Write to claim@google-rewards.xyz with your phone +40722334455 and CNP 1900101998877.'
+    text: 'Dear winner! Your email john.doe@gmail.com won $50,000 in Google Anniversary Promo. Write to claim@google-rewards.xyz with your phone +40722334455 and SSN 1900101998877.'
   },
   romance: {
     source: 'Chat',
@@ -60,8 +60,8 @@ interface InvestigationReport {
 export default function App() {
   const [inputText, setInputText] = useState('');
   const [situation, setSituation] = useState('before_click');
-  const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [report, setReport] = useState<InvestigationReport | null>(null);
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
   const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false });
@@ -69,7 +69,7 @@ export default function App() {
   const [imageFile, setImageFile] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
 
-  // Load health check on mount to verify ADK setup
+  // Load health check on mount
   useEffect(() => {
     fetch(`${API_BASE}/api/health`)
       .then((res) => res.json())
@@ -88,40 +88,10 @@ export default function App() {
     const sample = SAMPLES[key];
     setInputText(sample.text);
     setSituation(sample.situation);
-    setSelectedSample(key);
     setImageFile(null);
     setMimeType(null);
     setReport(null);
     setActiveTrace([]);
-  };
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value);
-    setSelectedSample(null);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setMimeType(file.type);
-    setSelectedSample(null);
-    setReport(null);
-    setActiveTrace([]);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageFile(reader.result as string);
-      setInputText(''); // Clear text when screenshot is uploaded
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const clearImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setImageFile(null);
-    setMimeType(null);
-    setInputText('');
   };
 
   const selectImageSample = (type: 'bank' | 'courier') => {
@@ -133,9 +103,35 @@ export default function App() {
     setMimeType('image/png');
     setInputText('');
     setSituation('before_click');
-    setSelectedSample(`${type}_screenshot`);
     setReport(null);
     setActiveTrace([]);
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputText(e.target.value);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMimeType(file.type);
+    setReport(null);
+    setActiveTrace([]);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageFile(reader.result as string);
+      setInputText('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImageFile(null);
+    setMimeType(null);
+    setInputText('');
   };
 
   const handleInvestigate = async () => {
@@ -145,7 +141,7 @@ export default function App() {
     setReport(null);
     setCopySuccess(false);
 
-    // 1. Initialize local visual trace for agent execution (prepending OCR if needed)
+    // Initialize visual trace
     const initialTrace: TraceStep[] = [];
     if (imageFile) {
       initialTrace.push({ step: 'Multimodal Vision OCR', status: 'running', detail: 'Decoding screenshot and transcribing text via Gemini Vision...' });
@@ -176,35 +172,22 @@ export default function App() {
         })
       });
 
-      if (!response.ok) {
-        throw new Error('API Request failed.');
-      }
+      if (!response.ok) throw new Error('API Request failed.');
 
       const data: InvestigationReport = await response.json();
-      if (data.extracted_text) {
-        setInputText(data.extracted_text);
-      }
+      if (data.extracted_text) setInputText(data.extracted_text);
 
-      // 2. Play out the trace steps sequentially to show agent workflow in the UI
+      // Play trace
       for (let i = 0; i < data.trace.length; i++) {
         await new Promise((resolve) => setTimeout(resolve, 350));
         setActiveTrace((prev) => {
           const next = [...prev];
-          if (next[i]) {
-            next[i] = {
-              ...data.trace[i],
-              status: 'completed'
-            };
-          }
-          // Set next one as active if exists
-          if (next[i + 1]) {
-            next[i + 1].status = 'running';
-          }
+          if (next[i]) next[i] = { ...data.trace[i], status: 'completed' };
+          if (next[i + 1]) next[i + 1].status = 'running';
           return next;
         });
       }
 
-      // Display the final output
       await new Promise((resolve) => setTimeout(resolve, 200));
       setReport(data);
     } catch (err) {
@@ -213,11 +196,7 @@ export default function App() {
         const next = [...prev];
         const activeIdx = next.findIndex(s => s.status === 'running' || s.status === 'pending');
         if (activeIdx !== -1) {
-          next[activeIdx] = {
-            step: 'Error',
-            status: 'pending',
-            detail: 'Server did not respond or API Key is missing.'
-          };
+          next[activeIdx] = { step: 'Error', status: 'pending', detail: 'Server did not respond or API Key is missing.' };
         }
         return next;
       });
@@ -233,135 +212,96 @@ export default function App() {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
+  // State machine derivation
+  const appState = loading ? 'analyzing' : (report ? 'result' : 'idle');
+
   return (
     <div className="app-container">
-      {/* HEADER SECTION */}
+      {/* HEADER SECTION (Navbar) */}
       <header>
         <div className="logo-section">
-          <h1>🛡️ TrustLens Agent</h1>
-          <p>AI Security Concierge for Investigating Suspicious Messages</p>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase' }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-primary)', filter: 'drop-shadow(0 0 5px var(--accent-primary))' }}>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" opacity="0.2" fill="currentColor"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor" />
+              <path d="M12 9a3 3 0 0 0-3 3" stroke="#fff" strokeWidth="1" />
+            </svg>
+            TrustLens
+          </h1>
         </div>
         <div className="status-bar">
-          <div className="badge-mcp">
+          <button className="badge" onClick={() => setShowHelp(true)} style={{ cursor: 'pointer', background: 'var(--panel-bg)', color: 'var(--accent-primary)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            App Info
+          </button>
+          <div className="badge">
             <span className="status-dot active"></span>
-            MCP Server Ready
+            MCP Ready
           </div>
-          <div className="badge-mcp" style={{ background: 'rgba(99, 102, 241, 0.08)', borderColor: 'rgba(99, 102, 241, 0.3)', color: '#a5b4fc', boxShadow: 'none' }}>
+          <div className="badge">
             <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
             ADK: {healthStatus.adk ? 'Active' : 'Standby'}
           </div>
         </div>
       </header>
 
-      {/* DASHBOARD GRID */}
-      <div className="dashboard-grid">
+      <div className="main-content">
         
-        {/* LEFT COLUMN: INPUT & TERMINAL TRACE */}
-        <div className="flex-column">
-          <div className="glass-panel">
-            <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              📥 Case Intake
+        {/* IDLE STATE (HERO) */}
+        {appState === 'idle' && (
+          <div className="panel" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+            <h3 className="panel-title" style={{ justifyContent: 'center', fontSize: '1.5rem', marginBottom: '2rem' }}>
+              Analyze a Suspicious Message
             </h3>
             
-            <div style={{ marginBottom: '1.25rem' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '1rem', marginBottom: '0.75rem' }}>
-                <div>
-                  <label>Suspicious Message Content</label>
-                  <textarea 
-                    value={inputText}
-                    onChange={handleTextChange}
-                    placeholder="Paste the suspicious SMS, email body, chat alert here..."
-                    disabled={loading || !!imageFile}
-                    style={{ minHeight: '120px' }}
-                  />
-                </div>
-                <div>
-                  <label>Or Upload Screenshot</label>
-                  <div style={{
-                    border: '2px dashed var(--panel-border)',
-                    borderRadius: '10px',
-                    height: '120px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: 'rgba(10, 8, 28, 0.4)',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    padding: '0.5rem',
-                    textAlign: 'center',
-                    transition: 'all 0.3s'
-                  }}>
-                    {imageFile ? (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
-                        <img 
-                          src={imageFile.startsWith('data:') ? imageFile : `data:${mimeType};base64,${imageFile}`} 
-                          style={{ maxHeight: '60px', borderRadius: '4px', maxWidth: '100%' }} 
-                        />
-                        <button 
-                          onClick={clearImage}
-                          style={{ background: 'var(--color-danger)', border: 'none', borderRadius: '4px', color: 'white', padding: '0.1rem 0.5rem', fontSize: '0.7rem', cursor: 'pointer' }}
-                          disabled={loading}
-                        >
-                          Clear Image
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <span style={{ fontSize: '1.25rem', marginBottom: '0.2rem' }}>📸</span>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Drag & drop image here or click</span>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleImageUpload} 
-                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
-                          disabled={loading}
-                        />
-                      </>
-                    )}
+            <div className="form-group">
+              <div className="uploader-box">
+                {imageFile ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', zIndex: 10 }}>
+                    <img 
+                      src={imageFile.startsWith('data:') ? imageFile : `data:${mimeType};base64,${imageFile}`} 
+                      style={{ maxHeight: '100px', borderRadius: '0.5rem', boxShadow: 'var(--shadow-md)' }} 
+                      alt="Uploaded threat"
+                    />
+                    <button 
+                      onClick={clearImage}
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', zIndex: 20 }}
+                    >
+                      Remove Image
+                    </button>
                   </div>
-                </div>
-              </div>
-              
-              <div className="samples-row">
-                <span style={{ fontSize: '0.75rem', alignSelf: 'center', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>Text Cases:</span>
-                {(Object.keys(SAMPLES) as Array<keyof typeof SAMPLES>).map((key) => (
-                  <button 
-                    key={key}
-                    className={`btn-sample ${selectedSample === key ? 'active' : ''}`}
-                    onClick={() => selectSample(key)}
-                    disabled={loading}
-                  >
-                    {key}
-                  </button>
-                ))}
-              </div>
-              <div className="samples-row" style={{ marginTop: '0.5rem' }}>
-                <span style={{ fontSize: '0.75rem', alignSelf: 'center', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>Screenshots:</span>
-                <button 
-                  className={`btn-sample ${selectedSample === 'bank_screenshot' ? 'active' : ''}`}
-                  onClick={() => selectImageSample('bank')}
-                  disabled={loading}
-                >
-                  📷 Bank Scam Screen
-                </button>
-                <button 
-                  className={`btn-sample ${selectedSample === 'courier_screenshot' ? 'active' : ''}`}
-                  onClick={() => selectImageSample('courier')}
-                  disabled={loading}
-                >
-                  📷 Courier Scam Screen
-                </button>
+                ) : (
+                  <>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--accent-primary)', marginBottom: '1rem' }}>
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <circle cx="8.5" cy="8.5" r="1.5"/>
+                      <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Upload Screenshot</span>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Drag & drop or click to select</span>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} title="Upload image file" />
+                  </>
+                )}
               </div>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label>Your Situation Context</label>
-              <select 
-                value={situation}
-                onChange={(e) => setSituation(e.target.value)}
-                disabled={loading}
-              >
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: '1rem 0', fontWeight: 500, fontSize: '0.875rem' }}>— OR —</div>
+
+            <div className="form-group">
+              <textarea 
+                value={inputText}
+                onChange={handleTextChange}
+                placeholder="Paste the suspicious SMS, email body, or chat message here..."
+                disabled={!!imageFile}
+                style={{ minHeight: '120px' }}
+                title="Message content"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>What is your current situation?</label>
+              <select value={situation} onChange={(e) => setSituation(e.target.value)} title="Select context">
                 <option value="before_click">I haven't clicked the link / replied yet (Prevention mode)</option>
                 <option value="clicked_only">I clicked the link, but didn't share data (Inspection mode)</option>
                 <option value="compromised">I shared my password, bank details, or code (Recovery mode)</option>
@@ -369,112 +309,100 @@ export default function App() {
             </div>
 
             <button 
-              className="btn-primary"
+              className="btn btn-primary"
               onClick={handleInvestigate}
-              disabled={loading || (!inputText.trim() && !imageFile)}
+              disabled={!inputText.trim() && !imageFile}
             >
-              {loading ? (
-                <>
-                  <span className="spinner"></span>
-                  Agent Running Heuristics...
-                </>
-              ) : (
-                '🔍 Trigger Agent Investigation'
-              )}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Analyze Threat
             </button>
+
+            {/* Quick Samples */}
+            <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Try a sample case:</span>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('courier')}>DHL SMS</button>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('bank')}>Bank Email</button>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('bank')}>📷 Bank Screen</button>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample('courier')}>📷 Courier Screen</button>
+              </div>
+            </div>
           </div>
+        )}
 
-          {/* AGENT TERMINAL TIMELINE */}
-          {activeTrace.length > 0 && (
-            <div className="glass-panel">
-              <h3 style={{ fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                💻 Agent Investigation Timeline
-              </h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem', marginBottom: '0.5rem' }}>
-                Live audit trace of tools invoked by the ADK Coordinator
-              </p>
-              
-              <div className="console-timeline">
-                {activeTrace.map((step, idx) => (
-                  <div key={idx} className="timeline-step">
-                    <span className={`step-status ${step.status}`}>
-                      {step.status === 'completed' ? '✓' : step.status === 'running' ? '●' : '○'}
-                    </span>
-                    <span className="step-name">[{step.step}]</span>
-                    <span className="step-detail">{step.detail}</span>
-                  </div>
-                ))}
+        {/* ANALYZING STATE (LOADING) */}
+        {appState === 'analyzing' && (
+          <div className="panel" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', marginBottom: '2.5rem', textAlign: 'center' }}>
+              <div className="spinner" style={{ width: '48px', height: '48px', borderColor: 'var(--panel-border)', borderTopColor: 'var(--accent-primary)', borderWidth: '4px' }}></div>
+              <div>
+                <h3 className="panel-title" style={{ justifyContent: 'center', marginBottom: '0.5rem', fontSize: '1.5rem' }}>Investigation in Progress</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Analyzing vectors, extracting context, and consulting threat intelligence...</p>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* RIGHT COLUMN: OUTCOME / REPORT */}
-        <div>
-          {!report && (
-            <div className="glass-panel" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div className="empty-state">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                </svg>
-                <h4 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>Awaiting Threat Data</h4>
-                <p style={{ maxWidth: '300px', fontSize: '0.85rem' }}>
-                  Paste a suspicious text message and click "Trigger Agent Investigation" to see security assessment results.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {report && (
-            <div className="flex-column">
-              {/* VERDICT SUMMARY */}
-              <div className="glass-panel">
-                <div className="verdict-header">
-                  <div>
-                    <h3 className="panel-header-title" style={{ marginBottom: 0 }}>
-                      🔍 Investigation Verdict
-                    </h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                      Confidence Index: {report.confidence}%
-                    </p>
+            
+            <div className="timeline-container">
+              {activeTrace.map((step, idx) => (
+                <div key={idx} className="timeline-step">
+                  <div className="timeline-icon">
+                    {step.status === 'completed' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                    {step.status === 'running' && <div className="spinner" style={{ width: '16px', height: '16px', borderColor: 'var(--panel-border)', borderTopColor: 'var(--accent-primary)' }}></div>}
+                    {step.status === 'pending' && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--panel-border-focus)', margin: '6px' }}></div>}
                   </div>
-                  <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
-                    {report.verdict} Risk
-                  </div>
-                </div>
-
-                <div className="meter-row">
-                  <div className="gauge-svg-container">
-                    <svg width="110" height="110" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="rgba(255, 255, 255, 0.04)"
-                        strokeWidth="3"
-                      />
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke={getScoreColor(report.risk_score)}
-                        strokeDasharray={`${report.risk_score}, 100`}
-                        strokeWidth="3.2"
-                        strokeLinecap="round"
-                        style={{ transition: 'stroke-dasharray 1s cubic-bezier(0.16, 1, 0.3, 1)' }}
-                      />
-                    </svg>
-                    <div className="gauge-val-label" style={{ color: getScoreColor(report.risk_score) }}>
-                      {report.risk_score}
-                      <span>SCORE</span>
+                  <div className="timeline-content">
+                    <div className="timeline-name" style={{ color: step.status === 'pending' ? 'var(--text-muted)' : 'var(--text-primary)' }}>
+                      {step.step}
+                    </div>
+                    <div className="timeline-detail" style={{ color: step.status === 'pending' ? 'var(--panel-border)' : 'var(--text-secondary)' }}>
+                      {step.detail}
                     </div>
                   </div>
-                  <div className="threat-signatures-box">
-                    <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.6rem', fontWeight: 700 }}>
-                      Threat Signatures Found:
-                    </h4>
-                    <div className="indicators-list">
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* RESULT STATE (DASHBOARD) */}
+        {appState === 'result' && report && (
+          <div className="dashboard-grid animate-pulse" style={{ animation: 'none' /* Disable pulse, keep class for reference if needed */ }}>
+            
+            {/* Header / Verdict Panel (Full Width) */}
+            <div className="panel full-width">
+              <div className="verdict-header">
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Investigation Complete</h2>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>Confidence Index: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
+                </div>
+                <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
+                  {report.verdict} Threat
+                </div>
+              </div>
+            </div>
+
+            {/* Left Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="panel">
+                <h3 className="panel-title">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Risk Assessment
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem' }}>
+                  <div className="gauge-container">
+                    <svg width="160" height="160" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--panel-bg-hover)" strokeWidth="3" />
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="3.2" strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s ease-out' }} />
+                    </svg>
+                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score) }}>
+                      {report.risk_score}<span>Score</span>
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '0.875rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Signatures Detected</h4>
+                    <div className="info-list">
                       {report.breakdown.map((item, idx) => (
-                        <div key={idx} className="indicator-item" style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
-                          <span className="indicator-desc">{item}</span>
+                        <div key={idx} className="info-item" style={{ borderLeft: `4px solid ${getScoreColor(report.risk_score)}` }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item}</span>
                         </div>
                       ))}
                     </div>
@@ -482,64 +410,59 @@ export default function App() {
                 </div>
 
                 {report.domain_reports && report.domain_reports.length > 0 && (
-                  <div style={{ marginTop: '1.75rem', borderTop: '1px solid var(--panel-border)', paddingTop: '1.25rem' }}>
-                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.75rem', fontWeight: 700 }}>
-                      Domain Security Audit
-                    </h4>
-                    {report.domain_reports.map((dom, i) => (
-                      <div key={i} className="domain-card" style={{ borderLeft: `3px solid ${getScoreColor(dom.risk_score)}` }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700 }}>
-                          <span className="text-cyan">{dom.domain}</span>
-                          <span style={{ color: getScoreColor(dom.risk_score) }}>{dom.verdict} ({dom.risk_score}/100)</span>
-                        </div>
-                        {dom.indicators.map((ind, j) => (
-                          <div key={j} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            <span style={{ color: 'var(--color-warning)' }}>⚠</span>
-                            {ind}
+                  <div style={{ borderTop: '1px solid var(--panel-border)', paddingTop: '1.5rem' }}>
+                    <h4 style={{ fontSize: '0.875rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '1rem', letterSpacing: '0.05em' }}>Domain Audit</h4>
+                    <div className="info-list">
+                      {report.domain_reports.map((dom, i) => (
+                        <div key={i} className="info-item" style={{ borderLeft: `4px solid ${getScoreColor(dom.risk_score)}`, flexDirection: 'column', gap: '0.5rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 500 }}>{dom.domain}</span>
+                            <span style={{ fontSize: '0.875rem', color: getScoreColor(dom.risk_score), fontWeight: 700 }}>{dom.risk_score}/100</span>
                           </div>
-                        ))}
-                      </div>
-                    ))}
+                          {dom.indicators.map((ind, j) => (
+                            <div key={j} style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem' }}>
+                              <span style={{ color: 'var(--color-warning)' }}>•</span> {ind}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* PRIVACY SANITIZATION PANEL */}
-              <div className="glass-panel">
-                <h3 className="panel-header-title">
-                  🔒 Privacy Guardrail (Sanitized Content)
+              <div className="panel">
+                <h3 className="panel-title">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                  Sanitized Content
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                  Anonymized message body analyzed by security agents
-                </p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Identifiable information was redacted before analysis.</p>
                 <div className="redacted-view">
                   {report.redacted_text}
                 </div>
               </div>
+            </div>
 
-              {/* ACTION PLAN */}
-              <div className="glass-panel">
-                <h3 className="panel-header-title">
-                  🛡️ Contextual Safety Guide
+            {/* Right Column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div className="panel">
+                <h3 className="panel-title">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Contextual Action Plan
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-                  Action steps customized for: <strong style={{ color: '#e9d5ff' }}>{getSituationLabel(situation)}</strong>
-                </p>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Customized for: <strong style={{ color: 'var(--text-primary)' }}>{getSituationLabel(situation)}</strong></p>
                 
-                <div className="safe-steps-container">
+                <div>
                   {report.safe_steps.map((step, idx) => {
                     const cleanStep = step.replace(/^\u26a0\ufe0f\s*|\u274c\s*|\u2611\ufe0f\s*|\u26a1\ufe0f\s*/, '').replace(/\*\*/g, '');
-                    
                     return (
                       <div key={idx} className="step-card">
-                        <div className="step-number" style={{ background: getScoreColor(report.risk_score) }}>
-                          {idx + 1}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <div className="step-icon-wrapper">
                           {getStepIcon(step)}
                         </div>
-                        <div className="step-text">
-                          {cleanStep}
+                        <div className="step-content">
+                          <div className="step-number">Step {idx + 1}</div>
+                          <div className="step-text">{cleanStep}</div>
                         </div>
                       </div>
                     );
@@ -547,40 +470,81 @@ export default function App() {
                 </div>
               </div>
 
-              {/* REPORT DRAFT */}
-              <div className="glass-panel report-panel">
-                <div className="flex-row-spaced">
-                  <h3 style={{ fontFamily: 'var(--font-display)' }}>📋 Authority Report Draft</h3>
-                  <button className="btn-copy" onClick={handleCopy}>
-                    {copySuccess ? '✓ Copied!' : 'Copy Report'}
+              <div className="panel">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h3 className="panel-title" style={{ marginBottom: 0 }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Report Draft
+                  </h3>
+                  <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+                    {copySuccess ? 'Copied!' : 'Copy to Clipboard'}
                   </button>
                 </div>
-                <div className="report-text">
+                <div className="redacted-view" style={{ background: 'var(--bg-color)', color: 'var(--text-primary)' }}>
                   {report.report_draft}
                 </div>
               </div>
 
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <button className="btn btn-secondary" onClick={() => { setReport(null); setInputText(''); setImageFile(null); }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  Analyze Another Message
+                </button>
+              </div>
+
             </div>
-          )}
-        </div>
+
+          </div>
+        )}
 
       </div>
+
+      {/* HELP MODAL */}
+      {showHelp && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
+          <div className="panel" style={{ maxWidth: '550px', width: '100%', position: 'relative', margin: '1rem', borderTop: '2px solid var(--accent-primary)', borderBottom: '2px solid var(--accent-secondary)' }}>
+            <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--panel-border)', borderRadius: '4px', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <h3 className="panel-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', color: 'var(--accent-primary)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              System Architecture
+            </h3>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p>
+                TrustLens is an AI Security Concierge powered by the <strong style={{ color: 'var(--text-primary)' }}>Google Agentic Design Kit (ADK)</strong> and <strong style={{ color: 'var(--text-primary)' }}>Model Context Protocol (MCP)</strong>.
+              </p>
+              <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <li><strong style={{ color: 'var(--accent-primary)' }}>Multimodal OCR:</strong> Decodes screenshots via Gemini Vision</li>
+                <li><strong style={{ color: 'var(--accent-primary)' }}>Agentic Workflow:</strong> Multi-agent routing via Google ADK</li>
+                <li><strong style={{ color: 'var(--accent-primary)' }}>Threat Intel:</strong> Live external lookups via MCP (GitHub/VT)</li>
+                <li><strong style={{ color: 'var(--accent-primary)' }}>Local AI Guardrails:</strong> Privacy redaction before analysis</li>
+              </ul>
+            </div>
+            <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Built by </span>
+              <a href="https://pixek.xyz" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-secondary)', textDecoration: 'none', fontWeight: 700, textShadow: '0 0 10px rgba(139, 92, 246, 0.5)' }}>pixek.xyz</a>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
 // Helper colors
 function getScoreColor(score: number) {
-  if (score >= 70) return '#ef4444'; // Red
-  if (score >= 35) return '#f59e0b'; // Yellow
-  return '#10b981'; // Green
+  if (score >= 70) return 'var(--color-danger)';
+  if (score >= 35) return 'var(--color-warning)';
+  return 'var(--color-safe)';
 }
 
 function getStepIcon(stepText: string) {
   const text = stepText.toLowerCase();
   if (text.includes("do not click") || text.includes("danger") || text.includes("not reply")) {
     return (
-      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
         <line x1="12" y1="8" x2="12" y2="12" />
         <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -589,7 +553,7 @@ function getStepIcon(stepText: string) {
   }
   if (text.includes("verify") || text.includes("check")) {
     return (
-      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00f2fe" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
       </svg>
@@ -597,7 +561,7 @@ function getStepIcon(stepText: string) {
   }
   if (text.includes("report") || text.includes("delete") || text.includes("block")) {
     return (
-      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-warning)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="3 6 5 6 21 6" />
         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
         <line x1="10" y1="11" x2="10" y2="17" />
@@ -607,7 +571,7 @@ function getStepIcon(stepText: string) {
   }
   if (text.includes("bank") || text.includes("card") || text.includes("freeze")) {
     return (
-      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
         <line x1="1" y1="10" x2="23" y2="10" />
       </svg>
@@ -615,14 +579,14 @@ function getStepIcon(stepText: string) {
   }
   if (text.includes("password") || text.includes("credential") || text.includes("mfa") || text.includes("2fa")) {
     return (
-      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
       </svg>
     );
   }
   return (
-    <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
       <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
