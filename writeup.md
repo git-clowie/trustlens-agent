@@ -1,5 +1,9 @@
 # Capstone Project Submission: TrustLens Agent
 
+<div align="center">
+  <img src="./docs/assets/banner.jpg" alt="TrustLens Banner" width="100%" style="border-radius: 12px;" />
+</div>
+
 ## 🛡️ Project Overview & Problem Statement
 
 Phishing attacks and social engineering scams account for a significant portion of security breaches. Every day, millions of people receive suspicious text messages, package fee notifications, bank alerts, or unsolicited links. 
@@ -36,6 +40,7 @@ We have successfully integrated 5 core concepts from the course curriculum:
 *   **Model Context Protocol (MCP)**: Developed an MCP server in `mcp_server.py` supporting both standard JSON-RPC 2.0 stdin/stdout (used by AI editors like Cursor) and `FastMCP`.
 *   **Security & Guardrails**: Integrated local PII redaction and zero-trust domain inspection to protect user privacy.
 *   **Deployability**: Created a portable bundle consisting of a React/TypeScript frontend and FastAPI backend, deployable locally or inside a Docker container.
+*   **Multimodal Vision & UI**: Implemented Gemini Vision for drag-and-drop OCR of threat screenshots, wrapped in a responsive Cyberpunk 'Premium Dark' UI.
 *   **Agent Skills & CLI**: Implemented `cli.py` to allow terminal users to query threats using `--sample` profiles or `--text` inputs.
 
 ---

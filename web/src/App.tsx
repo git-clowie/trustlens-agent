@@ -514,27 +514,44 @@ export default function App() {
 
       {/* HELP MODAL */}
       {showHelp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)' }}>
-          <div className="panel" style={{ maxWidth: '550px', width: '100%', position: 'relative', margin: '1rem', borderTop: '2px solid var(--accent-primary)', borderBottom: '2px solid var(--accent-secondary)' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', padding: '1rem' }}>
+          <div className="panel" style={{ maxWidth: '600px', width: '100%', position: 'relative', margin: '0', borderTop: '2px solid var(--accent-primary)', borderBottom: '2px solid var(--accent-secondary)' }}>
             <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--panel-border)', borderRadius: '4px', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
             <h3 className="panel-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', color: 'var(--accent-primary)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-              System Architecture
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              How to use TrustLens
             </h3>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <p>
-                TrustLens is an AI Security Concierge powered by the <strong style={{ color: 'var(--text-primary)' }}>Google Agentic Design Kit (ADK)</strong> and <strong style={{ color: 'var(--text-primary)' }}>Model Context Protocol (MCP)</strong>.
-              </p>
-              <ul style={{ paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <li><strong style={{ color: 'var(--accent-primary)' }}>Multimodal OCR:</strong> Decodes screenshots via Gemini Vision</li>
-                <li><strong style={{ color: 'var(--accent-primary)' }}>Agentic Workflow:</strong> Multi-agent routing via Google ADK</li>
-                <li><strong style={{ color: 'var(--accent-primary)' }}>Threat Intel:</strong> Live external lookups via MCP (GitHub/VT)</li>
-                <li><strong style={{ color: 'var(--accent-primary)' }}>Local AI Guardrails:</strong> Privacy redaction before analysis</li>
-              </ul>
+            
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>1. Submit a Suspicious Message</strong>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>Paste any suspicious SMS, email, or chat message into the console. Alternatively, you can upload a screenshot of the message directly and our AI will read the text.</p>
+              </div>
+
+              <div>
+                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>2. Specify the Context</strong>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>Let us know if you haven't clicked anything yet (Prevention), if you just clicked the link (Inspection), or if you already shared data (Recovery). We'll tailor the plan accordingly.</p>
+              </div>
+
+              <div>
+                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>3. Get Actionable Intelligence</strong>
+                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>Review the risk score, the exact social engineering techniques used, and follow the step-by-step contextual action plan to secure your data.</p>
+              </div>
             </div>
-            <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+
+            <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <strong style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>System Architecture</strong>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>
+                <span>• Multimodal Vision OCR</span>
+                <span>• Google ADK</span>
+                <span>• MCP Threat Intel</span>
+                <span>• Local Guardrails</span>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
               <span style={{ color: 'var(--text-muted)' }}>Built by </span>
               <a href="https://pixek.xyz" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-secondary)', textDecoration: 'none', fontWeight: 700, textShadow: '0 0 10px rgba(139, 92, 246, 0.5)' }}>pixek.xyz</a>
             </div>

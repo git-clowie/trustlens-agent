@@ -1,15 +1,21 @@
+<div align="center">
+  <img src="./docs/assets/banner.jpg" alt="TrustLens Banner" width="100%" style="border-radius: 12px;" />
+</div>
+
 # TrustLens Agent (AI Security Concierge)
 
-**TrustLens** is a security-first, ADK-powered AI investigation agent designed to check suspicious messages (SMS, Email, Chat, DMs) in the critical seconds before a user clicks. It anonymizes sensitive data, heuristically analyzes domain threat indicators, detects psychological social engineering tricks, calculates a consolidated threat score, and generates a personalized, situation-aware action plan.
+**TrustLens** is a security-first, ADK-powered AI investigation agent designed to check suspicious messages (SMS, Email, Chat, DMs) and screenshots in the critical seconds before a user clicks. It features a **Premium Dark Hi-Tech UI**, multimodal Vision OCR, anonymizes sensitive data, heuristically analyzes domain threat indicators, detects psychological social engineering tricks, calculates a consolidated threat score, and generates a personalized, situation-aware action plan.
 
 ## 🌟 Key Features
 
-1. **Privacy-First Guardrail (PII Redaction)**: Anonymizes credit cards, phone numbers, emails, and SSNs/CNPs before forwarding inputs to AI models.
-2. **Offline Domain Inspection**: Parses domain layout patterns for typosquatting, brand impersonation (e.g. netfl1x, paypa1), subdomains, and high-risk TLDs (.xyz, .cc, .top) without requesting live assets.
-3. **Social Engineering Detection**: Evaluates message indicators for artificial urgency, financial fees, and credential harvesting hooks.
-4. **Context-Aware Safety Planner**: Curates dynamic recovery guides tailored to user states (e.g., "I haven't clicked yet", "I clicked but didn't enter credentials", "I shared card details").
-5. **Incident Reporter**: Generates a pre-formatted incident draft ready to copy and send to anti-phishing organizations (APWG, CERT, domain registrars).
-6. **Multi-Interface Deployment**: Run it via the interactive premium React Web Dashboard, a local Python CLI tool, or expose tools to external AI clients via the Model Context Protocol (MCP) Server.
+1. **Multimodal Vision OCR**: Users can upload screenshots of suspicious messages. The app automatically extracts and analyzes the text using Gemini Vision before passing it to the security pipeline.
+2. **Premium Cyberpunk UI**: A beautifully crafted React frontend with a unified Omnibox, frosted cyber-glass panels, and auto-scanning capabilities.
+3. **Privacy-First Guardrail (PII Redaction)**: Anonymizes credit cards, phone numbers, emails, and SSNs/CNPs before forwarding inputs to AI models.
+4. **Offline Domain Inspection**: Parses domain layout patterns for typosquatting, brand impersonation (e.g. netfl1x, paypa1), subdomains, and high-risk TLDs (.xyz, .cc, .top) without requesting live assets.
+5. **Social Engineering Detection**: Evaluates message indicators for artificial urgency, financial fees, and credential harvesting hooks.
+6. **Context-Aware Safety Planner**: Curates dynamic recovery guides tailored to user states (e.g., "Prevention Mode", "Inspection Mode", "Recovery Mode").
+7. **Incident Reporter**: Generates a pre-formatted incident draft ready to copy and send to anti-phishing organizations (APWG, CERT, domain registrars).
+8. **Multi-Interface Deployment**: Run it via the interactive premium React Web Dashboard, a local Python CLI tool, or expose tools to external AI clients via the Model Context Protocol (MCP) Server.
 
 ---
 
