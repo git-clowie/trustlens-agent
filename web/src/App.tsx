@@ -241,13 +241,14 @@ export default function App() {
           <h1>🛡️ TrustLens Agent</h1>
           <p>AI Security Concierge for Investigating Suspicious Messages</p>
         </div>
-        <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'center' }}>
+        <div className="status-bar">
           <div className="badge-mcp">
-            <span style={{ display: 'inline-block', width: '8px', height: '8px', background: '#a855f7', borderRadius: '50%' }}></span>
-            MCP Exporter Enabled
+            <span className="status-dot active"></span>
+            MCP Server Ready
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: varColor(healthStatus.adk) }}>
-            <span>ADK: {healthStatus.adk ? '● Active' : '○ Standby'}</span>
+          <div className="badge-mcp" style={{ background: 'rgba(99, 102, 241, 0.08)', borderColor: 'rgba(99, 102, 241, 0.3)', color: '#a5b4fc', boxShadow: 'none' }}>
+            <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
+            ADK: {healthStatus.adk ? 'Active' : 'Standby'}
           </div>
         </div>
       </header>
@@ -430,7 +431,9 @@ export default function App() {
               <div className="glass-panel">
                 <div className="verdict-header">
                   <div>
-                    <h3 style={{ fontFamily: 'var(--font-display)' }}>Threat Verdict</h3>
+                    <h3 className="panel-header-title" style={{ marginBottom: 0 }}>
+                      🔍 Investigation Verdict
+                    </h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
                       Confidence Index: {report.confidence}%
                     </p>
@@ -440,14 +443,32 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                  <div className="meter-circle">
-                    <div className="score-val" style={{ color: getScoreColor(report.risk_score) }}>
+                <div className="meter-row">
+                  <div className="gauge-svg-container">
+                    <svg width="110" height="110" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.04)"
+                        strokeWidth="3"
+                      />
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke={getScoreColor(report.risk_score)}
+                        strokeDasharray={`${report.risk_score}, 100`}
+                        strokeWidth="3.2"
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dasharray 1s cubic-bezier(0.16, 1, 0.3, 1)' }}
+                      />
+                    </svg>
+                    <div className="gauge-val-label" style={{ color: getScoreColor(report.risk_score) }}>
                       {report.risk_score}
+                      <span>SCORE</span>
                     </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
+                  <div className="threat-signatures-box">
+                    <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.6rem', fontWeight: 700 }}>
                       Threat Signatures Found:
                     </h4>
                     <div className="indicators-list">
@@ -461,19 +482,20 @@ export default function App() {
                 </div>
 
                 {report.domain_reports && report.domain_reports.length > 0 && (
-                  <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--panel-border)', paddingTop: '1rem' }}>
-                    <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
-                      Domain Inspection Audit
+                  <div style={{ marginTop: '1.75rem', borderTop: '1px solid var(--panel-border)', paddingTop: '1.25rem' }}>
+                    <h4 style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.75rem', fontWeight: 700 }}>
+                      Domain Security Audit
                     </h4>
                     {report.domain_reports.map((dom, i) => (
-                      <div key={i} style={{ background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '8px', marginBottom: '0.5rem' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600 }}>
+                      <div key={i} className="domain-card" style={{ borderLeft: `3px solid ${getScoreColor(dom.risk_score)}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700 }}>
                           <span className="text-cyan">{dom.domain}</span>
-                          <span style={{ color: getScoreColor(dom.risk_score) }}>Score: {dom.risk_score}/100</span>
+                          <span style={{ color: getScoreColor(dom.risk_score) }}>{dom.verdict} ({dom.risk_score}/100)</span>
                         </div>
                         {dom.indicators.map((ind, j) => (
-                          <div key={j} style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', paddingLeft: '0.5rem' }}>
-                            ⚠ {ind}
+                          <div key={j} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <span style={{ color: 'var(--color-warning)' }}>⚠</span>
+                            {ind}
                           </div>
                         ))}
                       </div>
@@ -484,11 +506,11 @@ export default function App() {
 
               {/* PRIVACY SANITIZATION PANEL */}
               <div className="glass-panel">
-                <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>
-                  🔒 Privacy Guardrail (Sanitized Text)
+                <h3 className="panel-header-title">
+                  🔒 Privacy Guardrail (Sanitized Content)
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                  Message body forwarded to models after redact_pii anonymization
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                  Anonymized message body analyzed by security agents
                 </p>
                 <div className="redacted-view">
                   {report.redacted_text}
@@ -497,11 +519,11 @@ export default function App() {
 
               {/* ACTION PLAN */}
               <div className="glass-panel">
-                <h3 style={{ fontFamily: 'var(--font-display)', marginBottom: '0.5rem' }}>
-                  🛡️ Safe Action Plan
+                <h3 className="panel-header-title">
+                  🛡️ Contextual Safety Guide
                 </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                  Action steps customized for: <strong>{getSituationLabel(situation)}</strong>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
+                  Action steps customized for: <strong style={{ color: '#e9d5ff' }}>{getSituationLabel(situation)}</strong>
                 </p>
                 
                 <div className="safe-steps-container">
@@ -515,7 +537,7 @@ export default function App() {
                           {idx + 1}
                         </div>
                         <div className="step-text">
-                          <span style={{ marginRight: '0.5rem' }}>{prefix}</span>
+                          <span style={{ marginRight: '0.6rem', fontSize: '1rem' }}>{prefix}</span>
                           {cleanStep}
                         </div>
                       </div>
@@ -551,10 +573,6 @@ function getScoreColor(score: number) {
   if (score >= 70) return '#ef4444'; // Red
   if (score >= 35) return '#f59e0b'; // Yellow
   return '#10b981'; // Green
-}
-
-function varColor(active: boolean) {
-  return active ? '#10b981' : '#6b7280';
 }
 
 function getSituationLabel(sit: string) {
