@@ -28,14 +28,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from typing import Optional
+
 class InvestigationRequest(BaseModel):
-    text: str
+    text: Optional[str] = ""
     situation: str
+    image: Optional[str] = None
+    mime_type: Optional[str] = None
 
 @app.post("/api/investigate")
 async def investigate(req: InvestigationRequest):
-    if not req.text.strip():
-        raise HTTPException(status_code=400, detail="Message text cannot be empty.")
+    if not (req.text and req.text.strip()) and not req.image:
+        raise HTTPException(status_code=400, detail="Either message text or screenshot image must be provided.")
     
     valid_situations = ['before_click', 'clicked_only', 'compromised']
     if req.situation not in valid_situations:
@@ -43,7 +47,12 @@ async def investigate(req: InvestigationRequest):
         
     try:
         coordinator = TrustLensCoordinatorAgent()
-        report = coordinator.run_investigation(req.text, req.situation)
+        report = coordinator.run_investigation(
+            raw_message=req.text or "",
+            situation=req.situation,
+            image_base64=req.image,
+            mime_type=req.mime_type
+        )
         return report
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Agent investigation failed: {str(e)}")

@@ -54,6 +54,7 @@ interface InvestigationReport {
   report_draft: string;
   trace: TraceStep[];
   adk_framework_loaded: boolean;
+  extracted_text?: string | null;
 }
 
 export default function App() {
@@ -65,6 +66,8 @@ export default function App() {
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
   const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false });
   const [copySuccess, setCopySuccess] = useState(false);
+  const [imageFile, setImageFile] = useState<string | null>(null);
+  const [mimeType, setMimeType] = useState<string | null>(null);
 
   // Load health check on mount to verify ADK setup
   useEffect(() => {
@@ -86,6 +89,8 @@ export default function App() {
     setInputText(sample.text);
     setSituation(sample.situation);
     setSelectedSample(key);
+    setImageFile(null);
+    setMimeType(null);
     setReport(null);
     setActiveTrace([]);
   };
@@ -95,16 +100,60 @@ export default function App() {
     setSelectedSample(null);
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMimeType(file.type);
+    setSelectedSample(null);
+    setReport(null);
+    setActiveTrace([]);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageFile(reader.result as string);
+      setInputText(''); // Clear text when screenshot is uploaded
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setImageFile(null);
+    setMimeType(null);
+    setInputText('');
+  };
+
+  const selectImageSample = (type: 'bank' | 'courier') => {
+    const mockBase64 = type === 'bank' 
+      ? 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=MOCK_BANK_SCREENSHOT'
+      : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=MOCK_COURIER_SCREENSHOT';
+      
+    setImageFile(mockBase64);
+    setMimeType('image/png');
+    setInputText('');
+    setSituation('before_click');
+    setSelectedSample(`${type}_screenshot`);
+    setReport(null);
+    setActiveTrace([]);
+  };
+
   const handleInvestigate = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() && !imageFile) return;
 
     setLoading(true);
     setReport(null);
     setCopySuccess(false);
 
-    // 1. Initialize local visual trace for agent execution
-    const initialTrace: TraceStep[] = [
-      { step: 'PII Redaction', status: 'running', detail: 'Scanning text for sensitive information (names, emails, cards)...' },
+    // 1. Initialize local visual trace for agent execution (prepending OCR if needed)
+    const initialTrace: TraceStep[] = [];
+    if (imageFile) {
+      initialTrace.push({ step: 'Multimodal Vision OCR', status: 'running', detail: 'Decoding screenshot and transcribing text via Gemini Vision...' });
+      initialTrace.push({ step: 'PII Redaction', status: 'pending', detail: 'Waiting to scan text for sensitive information...' });
+    } else {
+      initialTrace.push({ step: 'PII Redaction', status: 'running', detail: 'Scanning text for sensitive information (names, emails, cards)...' });
+    }
+    initialTrace.push(
       { step: 'Link Extraction', status: 'pending', detail: 'Waiting to parse message links...' },
       { step: 'Domain Inspection', status: 'pending', detail: 'Waiting to analyze destination threat patterns...' },
       { step: 'Threat Intelligence Check', status: 'pending', detail: 'Waiting to review social engineering heuristics...' },
@@ -112,14 +161,19 @@ export default function App() {
       { step: 'Safety Planner', status: 'pending', detail: 'Waiting to assemble recommendations...' },
       { step: 'Incident Report Generator', status: 'pending', detail: 'Waiting to draft incident documentation...' },
       { step: 'Safety Review Guardrail', status: 'pending', detail: 'Waiting for guardrail validation...' }
-    ];
+    );
     setActiveTrace(initialTrace);
 
     try {
       const response = await fetch(`${API_BASE}/api/investigate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: inputText, situation })
+        body: JSON.stringify({ 
+          text: inputText, 
+          situation,
+          image: imageFile,
+          mime_type: mimeType
+        })
       });
 
       if (!response.ok) {
@@ -127,6 +181,9 @@ export default function App() {
       }
 
       const data: InvestigationReport = await response.json();
+      if (data.extracted_text) {
+        setInputText(data.extracted_text);
+      }
 
       // 2. Play out the trace steps sequentially to show agent workflow in the UI
       for (let i = 0; i < data.trace.length; i++) {
@@ -206,16 +263,67 @@ export default function App() {
             </h3>
             
             <div style={{ marginBottom: '1.25rem' }}>
-              <label>Suspicious Message Content</label>
-              <textarea 
-                value={inputText}
-                onChange={handleTextChange}
-                placeholder="Paste the suspicious SMS, email body, chat request, or link alert here..."
-                disabled={loading}
-              />
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '1rem', marginBottom: '0.75rem' }}>
+                <div>
+                  <label>Suspicious Message Content</label>
+                  <textarea 
+                    value={inputText}
+                    onChange={handleTextChange}
+                    placeholder="Paste the suspicious SMS, email body, chat alert here..."
+                    disabled={loading || !!imageFile}
+                    style={{ minHeight: '120px' }}
+                  />
+                </div>
+                <div>
+                  <label>Or Upload Screenshot</label>
+                  <div style={{
+                    border: '2px dashed var(--panel-border)',
+                    borderRadius: '10px',
+                    height: '120px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(10, 8, 28, 0.4)',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    padding: '0.5rem',
+                    textAlign: 'center',
+                    transition: 'all 0.3s'
+                  }}>
+                    {imageFile ? (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.3rem' }}>
+                        <img 
+                          src={imageFile.startsWith('data:') ? imageFile : `data:${mimeType};base64,${imageFile}`} 
+                          style={{ maxHeight: '60px', borderRadius: '4px', maxWidth: '100%' }} 
+                        />
+                        <button 
+                          onClick={clearImage}
+                          style={{ background: 'var(--color-danger)', border: 'none', borderRadius: '4px', color: 'white', padding: '0.1rem 0.5rem', fontSize: '0.7rem', cursor: 'pointer' }}
+                          disabled={loading}
+                        >
+                          Clear Image
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span style={{ fontSize: '1.25rem', marginBottom: '0.2rem' }}>📸</span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>Drag & drop image here or click</span>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleImageUpload} 
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                          disabled={loading}
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
               
               <div className="samples-row">
-                <span style={{ fontSize: '0.75rem', alignSelf: 'center', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>Samples:</span>
+                <span style={{ fontSize: '0.75rem', alignSelf: 'center', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>Text Cases:</span>
                 {(Object.keys(SAMPLES) as Array<keyof typeof SAMPLES>).map((key) => (
                   <button 
                     key={key}
@@ -226,6 +334,23 @@ export default function App() {
                     {key}
                   </button>
                 ))}
+              </div>
+              <div className="samples-row" style={{ marginTop: '0.5rem' }}>
+                <span style={{ fontSize: '0.75rem', alignSelf: 'center', color: 'var(--text-secondary)', marginRight: '0.25rem' }}>Screenshots:</span>
+                <button 
+                  className={`btn-sample ${selectedSample === 'bank_screenshot' ? 'active' : ''}`}
+                  onClick={() => selectImageSample('bank')}
+                  disabled={loading}
+                >
+                  📷 Bank Scam Screen
+                </button>
+                <button 
+                  className={`btn-sample ${selectedSample === 'courier_screenshot' ? 'active' : ''}`}
+                  onClick={() => selectImageSample('courier')}
+                  disabled={loading}
+                >
+                  📷 Courier Scam Screen
+                </button>
               </div>
             </div>
 
@@ -245,7 +370,7 @@ export default function App() {
             <button 
               className="btn-primary"
               onClick={handleInvestigate}
-              disabled={loading || !inputText.trim()}
+              disabled={loading || (!inputText.trim() && !imageFile)}
             >
               {loading ? (
                 <>
