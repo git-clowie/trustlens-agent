@@ -529,15 +529,16 @@ export default function App() {
                 <div className="safe-steps-container">
                   {report.safe_steps.map((step, idx) => {
                     const cleanStep = step.replace(/^\u26a0\ufe0f\s*|\u274c\s*|\u2611\ufe0f\s*|\u26a1\ufe0f\s*/, '').replace(/\*\*/g, '');
-                    const prefix = step.match(/^\u26a0\ufe0f|\u274c|\u2611\ufe0f|\u26a1\ufe0f|🚨/)?.[0] || '●';
                     
                     return (
                       <div key={idx} className="step-card">
                         <div className="step-number" style={{ background: getScoreColor(report.risk_score) }}>
                           {idx + 1}
                         </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {getStepIcon(step)}
+                        </div>
                         <div className="step-text">
-                          <span style={{ marginRight: '0.6rem', fontSize: '1rem' }}>{prefix}</span>
                           {cleanStep}
                         </div>
                       </div>
@@ -573,6 +574,59 @@ function getScoreColor(score: number) {
   if (score >= 70) return '#ef4444'; // Red
   if (score >= 35) return '#f59e0b'; // Yellow
   return '#10b981'; // Green
+}
+
+function getStepIcon(stepText: string) {
+  const text = stepText.toLowerCase();
+  if (text.includes("do not click") || text.includes("danger") || text.includes("not reply")) {
+    return (
+      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+    );
+  }
+  if (text.includes("verify") || text.includes("check")) {
+    return (
+      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00f2fe" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    );
+  }
+  if (text.includes("report") || text.includes("delete") || text.includes("block")) {
+    return (
+      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        <line x1="10" y1="11" x2="10" y2="17" />
+        <line x1="14" y1="11" x2="14" y2="17" />
+      </svg>
+    );
+  }
+  if (text.includes("bank") || text.includes("card") || text.includes("freeze")) {
+    return (
+      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+        <line x1="1" y1="10" x2="23" y2="10" />
+      </svg>
+    );
+  }
+  if (text.includes("password") || text.includes("credential") || text.includes("mfa") || text.includes("2fa")) {
+    return (
+      <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+    );
+  }
+  return (
+    <svg className="step-svg-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  );
 }
 
 function getSituationLabel(sit: string) {
