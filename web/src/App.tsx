@@ -92,6 +92,7 @@ export default function App() {
     setMimeType(null);
     setReport(null);
     setActiveTrace([]);
+    handleInvestigate(sample.text, null, null);
   };
 
   const selectImageSample = (type: 'bank' | 'courier') => {
@@ -105,6 +106,7 @@ export default function App() {
     setSituation('before_click');
     setReport(null);
     setActiveTrace([]);
+    handleInvestigate('', mockBase64, 'image/png');
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -134,8 +136,12 @@ export default function App() {
     setInputText('');
   };
 
-  const handleInvestigate = async () => {
-    if (!inputText.trim() && !imageFile) return;
+  const handleInvestigate = async (overrideText?: string, overrideImage?: string | null, overrideMime?: string | null) => {
+    const textToScan = overrideText !== undefined ? overrideText : inputText;
+    const imageToScan = overrideImage !== undefined ? overrideImage : imageFile;
+    const mimeToScan = overrideMime !== undefined ? overrideMime : mimeType;
+
+    if (!textToScan.trim() && !imageToScan) return;
 
     setLoading(true);
     setReport(null);
@@ -143,7 +149,7 @@ export default function App() {
 
     // Initialize visual trace
     const initialTrace: TraceStep[] = [];
-    if (imageFile) {
+    if (imageToScan) {
       initialTrace.push({ step: 'Multimodal Vision OCR', status: 'running', detail: 'Decoding screenshot and transcribing text via Gemini Vision...' });
       initialTrace.push({ step: 'PII Redaction', status: 'pending', detail: 'Waiting to scan text for sensitive information...' });
     } else {
@@ -165,10 +171,10 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          text: inputText, 
-          situation,
-          image: imageFile,
-          mime_type: mimeType
+          text: textToScan, 
+          situation: situation,
+          image: imageToScan,
+          mime_type: mimeToScan
         })
       });
 
@@ -254,63 +260,70 @@ export default function App() {
               Analyze a Suspicious Message
             </h3>
             
-            <div className="form-group">
-              <div className="uploader-box">
-                {imageFile ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', zIndex: 10 }}>
-                    <img 
-                      src={imageFile.startsWith('data:') ? imageFile : `data:${mimeType};base64,${imageFile}`} 
-                      style={{ maxHeight: '100px', borderRadius: '0.5rem', boxShadow: 'var(--shadow-md)' }} 
-                      alt="Uploaded threat"
-                    />
-                    <button 
-                      onClick={clearImage}
-                      className="btn btn-secondary"
-                      style={{ fontSize: '0.875rem', padding: '0.5rem 1rem', zIndex: 20 }}
-                    >
-                      Remove Image
-                    </button>
+            <div className="omnibox" style={{ position: 'relative', borderRadius: '12px', border: '1px solid var(--panel-border)', background: 'rgba(0,0,0,0.3)', overflow: 'hidden', transition: 'all 0.3s', marginBottom: '1.5rem', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
+              {imageFile ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem', gap: '1.5rem', position: 'relative' }}>
+                  <img 
+                    src={imageFile.startsWith('data:') ? imageFile : `data:${mimeType};base64,${imageFile}`} 
+                    style={{ maxHeight: '150px', borderRadius: '0.5rem', boxShadow: 'var(--shadow-md)' }} 
+                    alt="Uploaded threat"
+                  />
+                  <button 
+                    onClick={clearImage}
+                    className="btn btn-secondary"
+                    style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '0.5rem', fontSize: '0.75rem', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    title="Remove Image"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <textarea 
+                    value={inputText}
+                    onChange={handleTextChange}
+                    placeholder="Paste the suspicious SMS, email body, or chat message here..."
+                    style={{ width: '100%', minHeight: '180px', padding: '1.5rem', background: 'transparent', border: 'none', resize: 'vertical', color: 'var(--text-primary)', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}
+                    title="Message content"
+                  />
+                  <div style={{ borderTop: '1px solid var(--panel-border)', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Or upload screenshot:</span>
+                    <div style={{ position: 'relative' }}>
+                      <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', pointerEvents: 'none' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                        Browse Image
+                      </button>
+                      <input type="file" accept="image/*" onChange={handleImageUpload} title="Upload image file" style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%' }}/>
+                    </div>
                   </div>
-                ) : (
-                  <>
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ color: 'var(--accent-primary)', marginBottom: '1rem' }}>
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                    <span style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>Upload Screenshot</span>
-                    <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Drag & drop or click to select</span>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} title="Upload image file" />
-                  </>
-                )}
+                </>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', padding: '0 0.5rem' }}>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>Select Status to Improve Accuracy</label>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setSituation('before_click')} 
+                  style={{ flex: '1 1 120px', padding: '0.6rem', fontSize: '0.75rem', borderColor: situation === 'before_click' ? 'var(--accent-primary)' : 'var(--panel-border)', color: situation === 'before_click' ? 'var(--text-primary)' : 'var(--text-muted)', background: situation === 'before_click' ? 'rgba(0, 242, 254, 0.05)' : 'rgba(255,255,255,0.02)' }}
+                >Not Clicked</button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setSituation('clicked_only')} 
+                  style={{ flex: '1 1 120px', padding: '0.6rem', fontSize: '0.75rem', borderColor: situation === 'clicked_only' ? 'var(--accent-primary)' : 'var(--panel-border)', color: situation === 'clicked_only' ? 'var(--text-primary)' : 'var(--text-muted)', background: situation === 'clicked_only' ? 'rgba(0, 242, 254, 0.05)' : 'rgba(255,255,255,0.02)' }}
+                >Clicked Link</button>
+                <button 
+                  className="btn btn-secondary" 
+                  onClick={() => setSituation('compromised')} 
+                  style={{ flex: '1 1 120px', padding: '0.6rem', fontSize: '0.75rem', borderColor: situation === 'compromised' ? 'var(--accent-primary)' : 'var(--panel-border)', color: situation === 'compromised' ? 'var(--text-primary)' : 'var(--text-muted)', background: situation === 'compromised' ? 'rgba(0, 242, 254, 0.05)' : 'rgba(255,255,255,0.02)' }}
+                >Data Shared</button>
               </div>
-            </div>
-
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: '1rem 0', fontWeight: 500, fontSize: '0.875rem' }}>— OR —</div>
-
-            <div className="form-group">
-              <textarea 
-                value={inputText}
-                onChange={handleTextChange}
-                placeholder="Paste the suspicious SMS, email body, or chat message here..."
-                disabled={!!imageFile}
-                style={{ minHeight: '120px' }}
-                title="Message content"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>What is your current situation?</label>
-              <select value={situation} onChange={(e) => setSituation(e.target.value)} title="Select context">
-                <option value="before_click">I haven't clicked the link / replied yet (Prevention mode)</option>
-                <option value="clicked_only">I clicked the link, but didn't share data (Inspection mode)</option>
-                <option value="compromised">I shared my password, bank details, or code (Recovery mode)</option>
-              </select>
             </div>
 
             <button 
               className="btn btn-primary"
-              onClick={handleInvestigate}
+              onClick={() => handleInvestigate()}
               disabled={!inputText.trim() && !imageFile}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -534,6 +547,12 @@ export default function App() {
 }
 
 // Helper colors
+function getSituationLabel(sit: string) {
+  if (sit === 'before_click') return 'Prevention (Not Clicked)';
+  if (sit === 'clicked_only') return 'Inspection (Clicked Link)';
+  if (sit === 'compromised') return 'Recovery (Data Shared)';
+  return 'Standard Analysis';
+}
 function getScoreColor(score: number) {
   if (score >= 70) return 'var(--color-danger)';
   if (score >= 35) return 'var(--color-warning)';
@@ -591,13 +610,4 @@ function getStepIcon(stepText: string) {
       <polyline points="22 4 12 14.01 9 11.01" />
     </svg>
   );
-}
-
-function getSituationLabel(sit: string) {
-  switch (sit) {
-    case 'before_click': return 'Prevention Mode (Before Clicking)';
-    case 'clicked_only': return 'Inspection Mode (Clicked, No Data Entered)';
-    case 'compromised': return 'Recovery Mode (Data Compromised)';
-    default: return 'Standard Mode';
-  }
 }
