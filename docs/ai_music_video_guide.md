@@ -1,11 +1,11 @@
-# TrustLens AI Music Video Production Plan
+# TrustLens AI Music Video Production Plan (UI Screenshot Edition)
 
-Combine **Suno AI** (for the track) and **Luma Dream Machine / Runway Gen-3 / Pika** (for the video scenes) to build a fully AI-generated submission.
+This guide shows you how to capture **real screenshots of TrustLens** and animate them using AI Video Generators (**Runway Gen-3 / Luma Dream Machine / Kling**) to create a premium, high-tech product trailer set to a **Suno AI** track.
 
 ---
 
 ## 🎵 Part 1: Suno AI Lyrics & Style Config
-*   **Prompt for Suno Style:** `Obsidian dark cyberpunk synthwave, driving beat, electronic security theme, high-energy vocals, male and female duets, 110 BPM`
+*   **Prompt for Suno Style:** `Obsidian dark cyberpunk synthwave, driving electronic beat, high-energy vocals, male/female duet, 115 BPM`
 *   **Suno Lyrics (Copy & Paste):**
     ```text
     [Verse 1]
@@ -52,32 +52,31 @@ Combine **Suno AI** (for the track) and **Luma Dream Machine / Runway Gen-3 / Pi
 
 ---
 
-## 🎬 Part 2: Video Prompts for AI Video Generators (Luma / Runway)
-Use these prompts and feed the generated assets to compile your video clip matching the Suno track.
+## 📸 Part 2: Screenshot Checklist & AI Video Prompts
+Open `http://127.0.0.1:8000` in your browser and capture these **three** screenshots. Feed them into Runway or Luma as "Image Prompt" inputs to generate dynamic animations.
 
-### Scene 1: Intro (Verse 1)
-*   **Visual Asset Reference:** [banner.jpg](file:///e:/Antigravity/Kaggle%20Capstone/docs/assets/banner.jpg)
-*   **Video Prompt:**
-    > "A futuristic cyberpunk smartphone floating in a dark room. The screen displays a glowing phishing alert with bright red warnings. Neon purple and cyan light refracts off the screen. Cinematic, 4k resolution, high-tech, slow zoom."
+### Scene 1: The Premium Landing Page (Verse 1)
+*   **How to capture:** Take a screenshot of the main dashboard in its idle state, featuring the Logo, Omnibox, and the "Not Clicked / Clicked Link" segmented buttons. Save it as `screenshot_landing.png`.
+*   **AI Video Generator Prompt (Image-to-Video):**
+    > "Using this screenshot as the initial frame: A slow camera pan and zoom into the central terminal box. Overlay glowing cyan digital dust particles and subtle futuristic holographic grid lines. High-tech, cinematic, smooth camera motion."
 
-### Scene 2: PII Redaction (Verse 1 End / Chorus)
-*   **Visual Asset Reference:** [pii_redaction.jpg](file:///e:/Antigravity/Kaggle%20Capstone/docs/assets/pii_redaction.jpg)
-*   **Video Prompt:**
-    > "A digital stream of characters, phone numbers, and emails on a dark grid backdrop. A glowing cyan beam sweeps across, dissolving the numbers into blank digital shield blocks. Safe data encryption flow, 3D holographic rendering, smooth motion."
+### Scene 2: The Agent Timeline Animation (Chorus / Verse 2)
+*   **How to capture:** Click the **DHL SMS** button. While the spinner is active and the timeline items (Vision OCR, PII Redaction) are running or completing, take a screenshot of the active trace list. Save it as `screenshot_timeline.png`.
+*   **AI Video Generator Prompt (Image-to-Video):**
+    > "Using this screenshot as the initial frame: Make the green checkmarks pulse with light, and the text lines scroll upwards slightly. Add subtle digital glitch effects on the borders, resembling an active server console tracing files in a database."
 
-### Scene 3: Offline Domain Check (Verse 2)
-*   **Visual Asset Reference:** [domain_check.jpg](file:///e:/Antigravity/Kaggle%20Capstone/docs/assets/domain_check.jpg)
-*   **Video Prompt:**
-    > "A cyber intelligence interface analyzing a web address. The URL string breaks into glowing blocks labeled 'TLD', 'Subdomain', and 'Keywords'. Green holographic nodes light up as safe, and impostor keywords get highlighted in pulsing red danger glows."
-
-### Scene 4: MCP Tool Integration (Chorus 2 / Outro)
-*   **Visual Asset Reference:** [mcp_concept.jpg](file:///e:/Antigravity/Kaggle%20Capstone/docs/assets/mcp_concept.jpg)
-*   **Video Prompt:**
-    > "A dynamic network of multiple AI agents shown as glowing digital orbs, connecting via high-speed purple light pipelines to a central secure database. Data nodes pulsing, cybernetic grid lines, tech innovation concept, abstract digital network."
+### Scene 3: The Threat Score & Action Plan (Chorus 2 / Outro)
+*   **How to capture:** Let the analysis finish and scroll down to capture the threat score circular gauge (e.g., 95/100) and the Contextual Action Plan. Save it as `screenshot_report.png`.
+*   **AI Video Generator Prompt (Image-to-Video):**
+    > "Using this screenshot as the initial frame: Make the circular threat gauge glow and rotate slowly. Apply a clean 3D depth effect so the text blocks seem to float slightly in front of the dark mesh background. High-tech presentation style."
 
 ---
 
-## 🎞️ Part 3: Video Assembly Instructions
-1. Generate the track on **Suno AI** using the style and lyrics prompts.
-2. Generate 4 to 5 short clips (5-seconds each) on **Luma Dream Machine** or **Runway Gen-3** using the video prompts above. Optionally, use the generated images in `docs/assets/` as "Image-to-Video" source context to make the videos match the app style.
-3. Combine the audio track and video clips in any editor (like CapCut, Canva, or Premiere), overlay the lyrics on screen, and submit the final MP4.
+## 🎞️ Part 3: Easy Video Editing (Putting It Together)
+1. **Generate the Song:** Head to Suno AI, input the lyrics, and generate a Cyberpunk Synthwave track.
+2. **Generate the Clips:** Upload your 3 screenshots into Runway or Luma, paste the respective prompts above, and export the resulting 4-5 second video files.
+3. **Assemble in CapCut/Canva:**
+   - Drop the Suno audio track.
+   - Place the animated screenshot clips matching the lyrics.
+   - Add automated captions/lyrics overlay in a cyan cyberpunk color.
+   - Export your final Capstone video!
