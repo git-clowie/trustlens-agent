@@ -113,7 +113,7 @@ Get-ChildItem -LiteralPath $FullRoot -Recurse -File -Force |
 
 @"
 TrustLens release packages
-Version: 1.0.3
+Version: 1.0.4
 Public demo target: https://pixek.xyz/trustlens/
 
 trustlens-web-dist.zip

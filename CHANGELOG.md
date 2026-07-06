@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.4 - 2026-07-06
+
+Final sample and processing polish.
+
+* Changed quick sample buttons to load evidence into the workspace instead of auto-running analysis.
+* Improved investigation timeline scrolling so the active check is followed smoothly step by step.
+
 ## 1.0.3 - 2026-07-06
 
 Static Gemma demo option.

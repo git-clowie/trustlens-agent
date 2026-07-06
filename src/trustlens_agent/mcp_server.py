@@ -193,7 +193,7 @@ def handle_json_rpc(line):
                     },
                     "serverInfo": {
                         "name": "trustlens-mcp-server",
-                        "version": "1.0.3"
+                        "version": "1.0.4"
                     }
                 }
             }

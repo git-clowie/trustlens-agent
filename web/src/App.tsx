@@ -23,7 +23,7 @@ const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
 const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
 const RUNTIME_OPENROUTER_MODEL = window.TRUSTLENS_CONFIG?.OPENROUTER_MODEL || import.meta.env.VITE_OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL;
 const PUBLIC_OPENROUTER_DEMO_KEY = window.TRUSTLENS_CONFIG?.PUBLIC_OPENROUTER_DEMO_KEY || import.meta.env.VITE_PUBLIC_OPENROUTER_DEMO_KEY || '';
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.0.4';
 const TRACE_STEP_DELAY_MS = 320;
 const TRACE_FINAL_DELAY_MS = 180;
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || './';
@@ -211,11 +211,9 @@ export default function App() {
   }, [apiBase]);
 
   useEffect(() => {
-    if (!loading || !timelineRef.current) return;
-    timelineRef.current.scrollTo({
-      top: timelineRef.current.scrollHeight,
-      behavior: 'smooth'
-    });
+    if (!loading) return;
+    const runningIndex = activeTrace.findIndex((step) => step.status === 'running');
+    if (runningIndex >= 0) scrollTraceStepIntoView(runningIndex);
   }, [activeTrace, loading]);
 
   const selectSample = (key: keyof typeof SAMPLES) => {
@@ -227,7 +225,6 @@ export default function App() {
     setMimeType(null);
     setReport(null);
     setActiveTrace([]);
-    handleInvestigate(sample.text, null, null, sample.situation);
   };
 
   const selectImageSample = (type: keyof typeof SCREENSHOT_FIXTURES) => {
@@ -236,11 +233,10 @@ export default function App() {
     setImageFile(fixture.preview);
     setImagePayload(fixture.marker);
     setMimeType('image/svg+xml');
-    setInputText('');
+    setInputText(getClientFixtureText(fixture.marker));
     setSituation(fixture.situation);
     setReport(null);
     setActiveTrace([]);
-    handleInvestigate('', fixture.marker, 'image/svg+xml', fixture.situation);
   };
 
   const saveApiBase = () => {
@@ -360,6 +356,7 @@ export default function App() {
 
   const playTrace = async (trace: TraceStep[]) => {
     setActiveTrace(makeTraceTimeline(trace));
+    scrollTraceStepIntoView(0);
     for (let i = 0; i < trace.length; i++) {
       await new Promise((resolve) => setTimeout(resolve, TRACE_STEP_DELAY_MS));
       setActiveTrace((prev) => {
@@ -368,8 +365,20 @@ export default function App() {
         if (next[i + 1]) next[i + 1] = { ...trace[i + 1], status: 'running' };
         return next;
       });
+      scrollTraceStepIntoView(Math.min(i + 1, trace.length - 1));
     }
     await new Promise((resolve) => setTimeout(resolve, TRACE_FINAL_DELAY_MS));
+  };
+
+  const scrollTraceStepIntoView = (index: number) => {
+    window.requestAnimationFrame(() => {
+      const container = timelineRef.current;
+      const row = container?.querySelector<HTMLElement>(`[data-trace-index="${index}"]`);
+      if (!container || !row) return;
+
+      const top = Math.max(0, row.offsetTop - container.clientHeight * 0.35);
+      container.scrollTo({ top, behavior: 'smooth' });
+    });
   };
 
   const handleInvestigate = async (
@@ -715,7 +724,7 @@ export default function App() {
             
             <div className="timeline-container" ref={timelineRef}>
               {activeTrace.map((step, idx) => (
-                <div key={idx} className="timeline-step">
+                <div key={idx} className="timeline-step" data-trace-index={idx}>
                   <div className="timeline-icon">
                     {step.status === 'completed' && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                     {step.status === 'running' && <div className="spinner" style={{ width: '16px', height: '16px', borderColor: 'var(--panel-border)', borderTopColor: 'var(--accent-primary)' }}></div>}
