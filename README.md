@@ -32,6 +32,27 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 12. **Provider Settings + Offline Demo Mode**: Lets static demos point to a hosted backend, shows model/runtime state, and can force deterministic fallback mode.
 13. **MCP Tool Server + Demo Script**: Exposes the core scanner tools to MCP-compatible clients and includes a JSON-RPC proof script.
 
+## Presentation Deck
+
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-01.png" alt="TrustLens presentation slide 1" /></td>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-02.png" alt="TrustLens presentation slide 2" /></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-03.png" alt="TrustLens presentation slide 3" /></td>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-04.png" alt="TrustLens presentation slide 4" /></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-05.png" alt="TrustLens presentation slide 5" /></td>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-06.png" alt="TrustLens presentation slide 6" /></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-07.png" alt="TrustLens presentation slide 7" /></td>
+    <td width="50%"><img src="./docs/assets/presentation/trustlens-slide-08.png" alt="TrustLens presentation slide 8" /></td>
+  </tr>
+</table>
+
 ## Product Preview
 
 <table>
