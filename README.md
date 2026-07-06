@@ -10,7 +10,7 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 
 ## Current Release
 
-* Version: `1.0.2`
+* Version: `1.0.3`
 * Public static demo target: `https://pixek.xyz/trustlens/`
 * Repository: `https://github.com/git-clowie/trustlens-agent`
 * Static hosting: `web/dist` is safe to upload at a domain root or inside a subpath.
@@ -136,6 +136,8 @@ window.TRUSTLENS_CONFIG = {
 Gemini and OpenRouter keys must remain on the backend. The static frontend only stores the public API base URL.
 
 If the static demo cannot reach an API, quick samples still render a marked Browser Demo Fallback report so the public demo remains usable on simple hosting. Connect `API_BASE` to the FastAPI backend to enable the full ADK pipeline, Gemini OCR, and OpenRouter Gemma analyst output.
+
+For a SignalPack-style static demo, `web/dist/config.js` also supports `PUBLIC_OPENROUTER_DEMO_KEY`. This makes Gemma work directly from the browser on simple hosting, but the key is public to anyone who inspects the deployed files. Keep it empty in git and use a restricted/rotatable demo key only if that tradeoff is acceptable.
 
 The web build uses relative asset paths, so the same `web/dist` folder can be uploaded at a domain root or inside a subpath such as `https://pixek.xyz/trustlens/`. Upload the contents of `trustlens-web-dist.zip` into the public `/trustlens/` folder, not an extra nested `dist` directory.
 

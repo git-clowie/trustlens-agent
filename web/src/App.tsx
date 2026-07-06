@@ -5,6 +5,8 @@ declare global {
   interface Window {
     TRUSTLENS_CONFIG?: {
       API_BASE?: string;
+      OPENROUTER_MODEL?: string;
+      PUBLIC_OPENROUTER_DEMO_KEY?: string;
       SHOW_PROVIDER_SETTINGS?: boolean;
     };
   }
@@ -19,7 +21,9 @@ const HISTORY_KEY = 'trustlens_case_history_v2';
 const API_BASE_STORAGE_KEY = 'trustlens_api_base_v1';
 const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
 const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
-const APP_VERSION = '1.0.2';
+const RUNTIME_OPENROUTER_MODEL = window.TRUSTLENS_CONFIG?.OPENROUTER_MODEL || import.meta.env.VITE_OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL;
+const PUBLIC_OPENROUTER_DEMO_KEY = window.TRUSTLENS_CONFIG?.PUBLIC_OPENROUTER_DEMO_KEY || import.meta.env.VITE_PUBLIC_OPENROUTER_DEMO_KEY || '';
+const APP_VERSION = '1.0.3';
 const TRACE_STEP_DELAY_MS = 320;
 const TRACE_FINAL_DELAY_MS = 180;
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || './';
@@ -171,6 +175,7 @@ export default function App() {
   const [imagePayload, setImagePayload] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
   const [reportTab, setReportTab] = useState<'plan' | 'analysis' | 'packet'>('plan');
+  const browserGemmaEnabled = Boolean(PUBLIC_OPENROUTER_DEMO_KEY) && !offlineDemoMode;
 
   useEffect(() => {
     try {
@@ -193,7 +198,7 @@ export default function App() {
           adk: data.adk_available,
           keySet: data.api_key_set,
           openRouter: data.openrouter_key_set,
-          model: data.openrouter_model || DEFAULT_OPENROUTER_MODEL,
+          model: data.openrouter_model || RUNTIME_OPENROUTER_MODEL,
           apiReachable: true
         });
         setHealthChecked(true);
@@ -432,9 +437,10 @@ export default function App() {
       console.warn('TrustLens API unavailable; using browser demo fallback.', err);
       const demoReport = buildClientDemoReport(textToScan, situationToScan, typeof imageToScan === 'string' ? imageToScan : null);
       if (demoReport.extracted_text) setInputText(demoReport.extracted_text);
-      await playTrace(demoReport.trace);
-      setReport(demoReport);
-      persistCase(demoReport, situationToScan);
+      const finalDemoReport = await enrichBrowserDemoReport(demoReport, situationToScan, offlineDemoMode);
+      await playTrace(finalDemoReport.trace);
+      setReport(finalDemoReport);
+      persistCase(finalDemoReport, situationToScan);
     } finally {
       setLoading(false);
     }
@@ -534,9 +540,9 @@ export default function App() {
             </span>
           )}
           {healthChecked && !healthStatus.apiReachable && !offlineDemoMode && (
-            <span className="badge static-demo-badge" title="Backend API is not connected, so reports use the browser demo fallback.">
-              <span className="status-dot inactive"></span>
-              Browser Demo
+            <span className="badge static-demo-badge" title={browserGemmaEnabled ? 'Backend API is offline, but the static demo has browser OpenRouter Gemma enabled.' : 'Backend API is not connected, so reports use the browser demo fallback.'}>
+              <span className={`status-dot ${browserGemmaEnabled ? 'active' : 'inactive'}`}></span>
+              {browserGemmaEnabled ? 'Browser Gemma' : 'Browser Demo'}
             </span>
           )}
           {PROVIDER_SETTINGS_ENABLED && (
@@ -1160,13 +1166,13 @@ export default function App() {
               </div>
               <div className="settings-card">
                 <span>OpenRouter</span>
-                <strong style={{ color: healthStatus.openRouter && !offlineDemoMode ? 'var(--accent-primary)' : 'var(--color-warning)' }}>
-                  {offlineDemoMode ? 'Demo Fallback' : healthStatus.openRouter ? 'Live' : 'Local Fallback'}
+                <strong style={{ color: (healthStatus.openRouter || browserGemmaEnabled) && !offlineDemoMode ? 'var(--accent-primary)' : 'var(--color-warning)' }}>
+                  {offlineDemoMode ? 'Demo Fallback' : healthStatus.openRouter ? 'Live' : browserGemmaEnabled ? 'Browser Live' : 'Local Fallback'}
                 </strong>
               </div>
               <div className="settings-card full">
                 <span>Gemma Model</span>
-                <strong>{healthStatus.model || DEFAULT_OPENROUTER_MODEL}</strong>
+                <strong>{healthStatus.model || RUNTIME_OPENROUTER_MODEL}</strong>
               </div>
             </div>
 
@@ -1191,9 +1197,9 @@ export default function App() {
             <span className={`status-dot ${healthStatus.apiReachable ? 'active' : 'inactive'}`}></span>
             API {healthStatus.apiReachable ? 'connected' : 'offline'}
           </span>
-          <span className="runtime-pill" title={healthStatus.model || DEFAULT_OPENROUTER_MODEL}>
-            <span className={`status-dot ${healthStatus.openRouter && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
-            Gemma {offlineDemoMode ? 'demo' : healthStatus.openRouter ? 'live' : 'fallback'}
+          <span className="runtime-pill" title={browserGemmaEnabled ? `${healthStatus.model || RUNTIME_OPENROUTER_MODEL} via browser demo key` : (healthStatus.model || RUNTIME_OPENROUTER_MODEL)}>
+            <span className={`status-dot ${(healthStatus.openRouter || browserGemmaEnabled) && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
+            Gemma {offlineDemoMode ? 'demo' : healthStatus.openRouter ? 'live' : browserGemmaEnabled ? 'browser live' : 'fallback'}
           </span>
           <span className="runtime-pill" title="Screenshot OCR uses Gemini when configured, otherwise deterministic demo fixtures.">
             <span className={`status-dot ${healthStatus.keySet && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
@@ -1270,6 +1276,121 @@ async function copyTextToClipboard(value: string) {
 function getImagePreviewSrc(value: string, mimeType?: string | null) {
   if (value.startsWith('data:') || value.startsWith('/') || value.startsWith('http')) return value;
   return `data:${mimeType || 'image/png'};base64,${value}`;
+}
+
+async function enrichBrowserDemoReport(report: InvestigationReport, situation: string, forceFallback: boolean): Promise<InvestigationReport> {
+  if (forceFallback || !PUBLIC_OPENROUTER_DEMO_KEY) return report;
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${PUBLIC_OPENROUTER_DEMO_KEY}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'TrustLens Public Demo',
+      },
+      body: JSON.stringify({
+        model: RUNTIME_OPENROUTER_MODEL,
+        temperature: 0.2,
+        max_tokens: 700,
+        messages: [
+          {
+            role: 'system',
+            content: [
+              'You are TrustLens Gemma Analyst, a phishing safety analyst.',
+              'Use only the sanitized evidence provided by TrustLens.',
+              'Return compact JSON only with keys: executive_summary, user_explanation, recommended_priority, evidence, questions, next_actions, confidence_note.',
+              'evidence must be an array of {signal, why_it_matters, severity}.',
+            ].join(' '),
+          },
+          {
+            role: 'user',
+            content: JSON.stringify({
+              context: getSituationLabel(situation),
+              verdict: report.verdict,
+              risk_score: report.risk_score,
+              confidence: report.confidence,
+              redacted_text: report.redacted_text,
+              links: report.links.map((link) => ({ domain: link.domain })),
+              domain_reports: report.domain_reports,
+              social_engineering_indicators: report.social_engineering_indicators,
+              score_trace: report.score_trace,
+              local_next_actions: report.safe_steps,
+            }),
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) throw new Error(`OpenRouter request failed: ${response.status}`);
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    const parsed = parseGemmaJson(content);
+    const evidence = Array.isArray(parsed.evidence) ? parsed.evidence.slice(0, 4) : report.ai_analysis.evidence;
+    const nextActions = Array.isArray(parsed.next_actions) && parsed.next_actions.length ? parsed.next_actions.slice(0, 5) : report.safe_steps;
+    const questions = Array.isArray(parsed.questions) ? parsed.questions.slice(0, 3) : report.ai_analysis.questions;
+    const model = data?.model || RUNTIME_OPENROUTER_MODEL;
+
+    return {
+      ...report,
+      safe_steps: nextActions,
+      ai_analysis: {
+        provider: 'openrouter-browser-demo',
+        model,
+        fallback_used: false,
+        status: 'live',
+        recommended_priority: String(parsed.recommended_priority || report.ai_analysis.recommended_priority || 'review'),
+        executive_summary: String(parsed.executive_summary || report.ai_analysis.executive_summary),
+        user_explanation: String(parsed.user_explanation || report.ai_analysis.user_explanation),
+        evidence,
+        questions,
+        next_actions: nextActions,
+        confidence_note: String(parsed.confidence_note || 'Gemma enrichment generated from sanitized TrustLens browser-demo evidence.'),
+      },
+      report_draft: [
+        report.report_draft.replace('Analyst route: Browser Demo Fallback', `Analyst route: Browser OpenRouter Gemma (${model})`),
+        '',
+        'Gemma summary:',
+        String(parsed.executive_summary || report.ai_analysis.executive_summary),
+      ].join('\n'),
+      trace: report.trace.map((step) => (
+        step.step === 'Gemma Analyst'
+          ? { ...step, detail: `Gemma enrichment completed via OpenRouter browser demo (${model}).` }
+          : step
+      )),
+    };
+  } catch (error) {
+    console.warn('Browser OpenRouter demo failed; keeping deterministic fallback.', error);
+    return {
+      ...report,
+      trace: report.trace.map((step) => (
+        step.step === 'Gemma Analyst'
+          ? { ...step, detail: 'Browser OpenRouter demo failed. Deterministic fallback explanation attached.' }
+          : step
+      )),
+    };
+  }
+}
+
+function parseGemmaJson(value: unknown) {
+  if (typeof value !== 'string') return {};
+  const trimmed = value.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    const start = trimmed.indexOf('{');
+    const end = trimmed.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(trimmed.slice(start, end + 1));
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }
 }
 
 function buildClientDemoReport(rawText: string, situation: string, imageMarker?: string | null): InvestigationReport {

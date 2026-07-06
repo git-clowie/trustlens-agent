@@ -4,6 +4,11 @@ window.TRUSTLENS_CONFIG = {
   // API_BASE: "https://api.example.com"
   API_BASE: "",
 
+  // Optional SignalPack-style static demo mode.
+  // WARNING: any key placed here is public to browser users. Prefer API_BASE + backend for production.
+  OPENROUTER_MODEL: "google/gemma-4-31b-it",
+  PUBLIC_OPENROUTER_DEMO_KEY: "",
+
   // Keep hidden for public demo builds. Use ?settings=1 or set true for admin testing.
   SHOW_PROVIDER_SETTINGS: false
 };

@@ -113,7 +113,7 @@ Get-ChildItem -LiteralPath $FullRoot -Recurse -File -Force |
 
 @"
 TrustLens release packages
-Version: 1.0.2
+Version: 1.0.3
 Public demo target: https://pixek.xyz/trustlens/
 
 trustlens-web-dist.zip
@@ -122,6 +122,7 @@ trustlens-web-dist.zip
 - Static quick samples include a marked Browser Demo Fallback when the API is unreachable.
 - Keep OPENROUTER_API_KEY and GEMINI_API_KEY only on the backend.
 - web/dist/config.js defaults to same-origin API with Provider Settings hidden.
+- Optional static Browser Gemma mode can be enabled by setting PUBLIC_OPENROUTER_DEMO_KEY in config.js; that key is public to browser users.
 - Use ?settings=1 for admin testing.
 
 trustlens-full-app.zip

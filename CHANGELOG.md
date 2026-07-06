@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 - 2026-07-06
+
+Static Gemma demo option.
+
+* Added optional browser-side OpenRouter Gemma enrichment for simple static hosting, configured at deploy time through `web/dist/config.js`.
+* Kept the repository demo key empty and documented that public static keys are visible to browser users.
+* Updated runtime badges to distinguish Browser Demo fallback from Browser Gemma mode.
+
 ## 1.0.2 - 2026-07-06
 
 Public demo clarity and polish release.
