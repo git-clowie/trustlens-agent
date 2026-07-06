@@ -19,6 +19,12 @@ const HISTORY_KEY = 'trustlens_case_history_v2';
 const API_BASE_STORAGE_KEY = 'trustlens_api_base_v1';
 const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
 const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
+const APP_VERSION = '1.0.1';
+const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || './';
+
+function publicAsset(path: string) {
+  return `${PUBLIC_ASSET_BASE.replace(/\/?$/, '/')}${path.replace(/^\/+/, '')}`;
+}
 
 // Predefined samples matching backend CLI
 const SAMPLES = {
@@ -47,19 +53,19 @@ const SAMPLES = {
 const SCREENSHOT_FIXTURES = {
   bank: {
     label: 'Bank Screen',
-    preview: '/fixtures/screenshots/bank-alert.svg',
+    preview: publicAsset('fixtures/screenshots/bank-alert.svg'),
     marker: 'TRUSTLENS_FIXTURE_BANK_SCREENSHOT',
     situation: 'before_click',
   },
   lottery: {
     label: 'Prize Screen',
-    preview: '/fixtures/screenshots/lottery-claim.svg',
+    preview: publicAsset('fixtures/screenshots/lottery-claim.svg'),
     marker: 'TRUSTLENS_FIXTURE_LOTTERY_SCREENSHOT',
     situation: 'before_click',
   },
   qr: {
     label: 'QR Screen',
-    preview: '/fixtures/screenshots/qr-login.svg',
+    preview: publicAsset('fixtures/screenshots/qr-login.svg'),
     marker: 'TRUSTLENS_FIXTURE_QR_SCREENSHOT',
     situation: 'clicked_only',
   },
@@ -410,7 +416,7 @@ export default function App() {
       setReport(data);
       persistCase(data, situationToScan);
     } catch (err) {
-      console.error(err);
+      console.warn('TrustLens API unavailable; using browser demo fallback.', err);
       const demoReport = buildClientDemoReport(textToScan, situationToScan, typeof imageToScan === 'string' ? imageToScan : null);
       if (demoReport.extracted_text) setInputText(demoReport.extracted_text);
       setActiveTrace(demoReport.trace);
@@ -1155,9 +1161,12 @@ export default function App() {
             <span className="status-dot active"></span>
             MCP ready
           </span>
+          <span className="runtime-pill" title="TrustLens release version.">
+            v{APP_VERSION}
+          </span>
         </div>
         <div className="footer-credit">
-          Built by <a href="https://pixek.xyz" target="_blank" rel="noreferrer">pixek.xyz</a>
+          TrustLens v{APP_VERSION} · Built by <a href="https://pixek.xyz" target="_blank" rel="noreferrer">pixek.xyz</a>
         </div>
       </footer>
     </div>

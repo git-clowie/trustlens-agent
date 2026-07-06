@@ -129,6 +129,8 @@ Gemini and OpenRouter keys must remain on the backend. The static frontend only 
 
 If the static demo cannot reach an API, quick samples still render a marked Browser Demo Fallback report so the public demo remains usable on simple hosting. Connect `API_BASE` to the FastAPI backend to enable the full ADK pipeline, Gemini OCR, and OpenRouter Gemma analyst output.
 
+The web build uses relative asset paths, so the same `web/dist` folder can be uploaded at a domain root or inside a subpath such as `https://pixek.xyz/trustlens/`.
+
 The built dashboard hides Provider Settings by default for a clean public demo. For admin testing, open the app with `?settings=1` or set `SHOW_PROVIDER_SETTINGS: true` in `web/dist/config.js`. The modal can override the API base URL in browser localStorage, show the active Gemma model, and enable Offline Demo Mode for deterministic fallback runs.
 
 ## Release Packages

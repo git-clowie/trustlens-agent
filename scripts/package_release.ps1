@@ -115,6 +115,7 @@ TrustLens release packages
 
 trustlens-web-dist.zip
 - Upload the archive contents to static hosting when the API is served separately or same-origin.
+- Relative asset paths support domain-root or subfolder deploys, for example /trustlens/.
 - Static quick samples include a marked Browser Demo Fallback when the API is unreachable.
 - Keep OPENROUTER_API_KEY and GEMINI_API_KEY only on the backend.
 - web/dist/config.js defaults to same-origin API with Provider Settings hidden.
