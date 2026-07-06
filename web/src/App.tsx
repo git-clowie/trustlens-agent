@@ -71,12 +71,6 @@ const SCREENSHOT_FIXTURES = {
   },
 };
 
-const JUDGE_DEMO_SEQUENCE = [
-  { label: 'DHL SMS', mode: 'text', key: 'courier' },
-  { label: 'Bank Screen', mode: 'image', key: 'bank' },
-  { label: 'QR Screen', mode: 'image', key: 'qr' },
-] as const;
-
 interface TraceStep {
   step: string;
   status: 'running' | 'completed' | 'pending';
@@ -168,11 +162,11 @@ export default function App() {
   const [apiBase, setApiBase] = useState(loadStoredApiBase);
   const [apiBaseDraft, setApiBaseDraft] = useState(loadStoredApiBase);
   const [offlineDemoMode, setOfflineDemoMode] = useState(() => loadStoredBoolean(OFFLINE_DEMO_STORAGE_KEY));
-  const [demoStepIndex, setDemoStepIndex] = useState(0);
   const [caseHistory, setCaseHistory] = useState<CaseRecord[]>([]);
   const [imageFile, setImageFile] = useState<string | null>(null);
   const [imagePayload, setImagePayload] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
+  const [reportTab, setReportTab] = useState<'plan' | 'analysis' | 'packet'>('plan');
 
   useEffect(() => {
     try {
@@ -228,16 +222,6 @@ export default function App() {
     setReport(null);
     setActiveTrace([]);
     handleInvestigate('', fixture.marker, 'image/svg+xml', fixture.situation);
-  };
-
-  const runJudgeDemoStep = () => {
-    const nextStep = JUDGE_DEMO_SEQUENCE[demoStepIndex % JUDGE_DEMO_SEQUENCE.length];
-    setDemoStepIndex((prev) => prev + 1);
-    if (nextStep.mode === 'text') {
-      selectSample(nextStep.key);
-    } else {
-      selectImageSample(nextStep.key);
-    }
   };
 
   const saveApiBase = () => {
@@ -477,6 +461,18 @@ export default function App() {
     window.print();
   };
 
+  const resetWorkspace = () => {
+    setReport(null);
+    setInputText('');
+    setImageFile(null);
+    setImagePayload(null);
+    setMimeType(null);
+    setLoading(false);
+    setActiveTrace([]);
+    setShowHelp(false);
+    setShowProviderSettings(false);
+  };
+
   // State machine derivation
   const appState = loading ? 'analyzing' : (report ? 'result' : 'idle');
 
@@ -484,17 +480,19 @@ export default function App() {
     <div className="app-container">
       {/* HEADER SECTION (Navbar) */}
       <header>
-        <div className="logo-section" onClick={() => {
-          setReport(null);
-          setInputText('');
-          setImageFile(null);
-          setImagePayload(null);
-          setMimeType(null);
-          setLoading(false);
-          setActiveTrace([]);
-          setShowHelp(false);
-          setShowProviderSettings(false);
-        }} style={{ cursor: 'pointer', userSelect: 'none' }}>
+        <div
+          className="logo-section logo-reset"
+          role="button"
+          tabIndex={0}
+          aria-label="Reset TrustLens workspace"
+          onClick={resetWorkspace}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              resetWorkspace();
+            }
+          }}
+        >
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase' }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-primary)', filter: 'drop-shadow(0 0 5px var(--accent-primary))' }}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" opacity="0.2" fill="currentColor"/>
@@ -608,10 +606,7 @@ export default function App() {
             <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Try a sample case:</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: 'var(--accent-primary)' }} onClick={runJudgeDemoStep}>
-                  Judge Demo: {JUDGE_DEMO_SEQUENCE[demoStepIndex % JUDGE_DEMO_SEQUENCE.length].label}
-                </button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('courier')}>DHL SMS</button>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: 'var(--accent-primary)' }} onClick={() => selectSample('courier')}>DHL SMS</button>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('bank')}>Bank Email</button>
                 {Object.entries(SCREENSHOT_FIXTURES).map(([key, fixture]) => (
                   <button key={key} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample(key as keyof typeof SCREENSHOT_FIXTURES)}>
@@ -702,298 +697,298 @@ export default function App() {
 
         {/* RESULT STATE (DASHBOARD) */}
         {appState === 'result' && report && (
-          <div className="dashboard-grid animate-pulse" style={{ animation: 'none' /* Disable pulse, keep class for reference if needed */ }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', width: '100%', animation: 'none' }}>
             
-            {/* Header / Verdict Panel (Full Width) */}
-            <div className="panel full-width">
-              <div className="verdict-header">
-                <div>
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem', letterSpacing: 0 }}>Investigation Complete</h2>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>Evidence Confidence: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.35rem', fontFamily: 'var(--font-mono)' }}>
-                    AI Analyst: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong>
+            {/* At a Glance (Full-width top section) */}
+            <div className="panel full-width at-a-glance-panel">
+              <div className="at-a-glance-grid">
+                
+                {/* Status Column */}
+                <div className="status-col">
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.4rem', color: 'var(--text-primary)' }}>Security Review</h2>
+                  <div className={`verdict-badge ${report.verdict.toLowerCase()}`} style={{ display: 'inline-block', width: 'fit-content', marginBottom: '0.65rem' }}>
+                    {report.verdict} Risk
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Confidence: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
+                    Analyst: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong>
                   </p>
                 </div>
-                <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
-                  {report.verdict} Risk
-                </div>
-              </div>
-            </div>
 
-            <div className="panel full-width">
-              <h3 className="panel-title">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9"/><path d="M12 16V5"/><path d="M17 16v-3"/></svg>
-                Evidence Analytics
-              </h3>
-              <div className="metric-grid">
-                {getEvidenceStats(report).map((stat) => (
-                  <div key={stat.label} className="metric-item">
-                    <span className="metric-label">{stat.label}</span>
-                    <strong className="metric-value" style={{ color: stat.color }}>{stat.value}</strong>
-                    <span className="metric-note">{stat.note}</span>
-                  </div>
-                ))}
-              </div>
-              {report.score_trace?.length > 0 && (
-                <div className="score-trace">
-                  <h4 className="section-kicker">Score Trace</h4>
-                  <div className="score-trace-list">
-                    {report.score_trace.slice(0, 6).map((item, idx) => (
-                      <div key={`${item.label}-${idx}`} className="score-trace-item">
-                        <div className="score-trace-topline">
-                          <strong>{item.label}</strong>
-                          <span style={{ color: getTraceColor(item) }}>+{item.impact}</span>
-                        </div>
-                        <div className="score-trace-bar" aria-hidden="true">
-                          <span style={{ width: `${Math.min(Math.max(item.impact, 4), 100)}%`, background: getTraceColor(item) }}></span>
-                        </div>
-                        <p>{item.evidence}</p>
-                        <small>{item.source.replace(/_/g, ' ')} - {item.calculation}</small>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Left Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="panel">
-                <h3 className="panel-title">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  Risk Assessment
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                  <div className="gauge-container">
-                    <svg width="160" height="160" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                {/* Score & Signatures Column */}
+                <div className="score-col">
+                  <div className="gauge-container" style={{ width: '100px', height: '100px', flexShrink: 0 }}>
+                    <svg width="100" height="100" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--panel-bg-hover)" strokeWidth="3" />
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="3.2" strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s ease-out' }} />
                     </svg>
-                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score) }}>
-                      {report.risk_score}<span>Risk Score</span>
+                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score), fontSize: '1.75rem' }}>
+                      {report.risk_score}<span style={{ fontSize: '0.42rem', marginTop: '0.15rem', color: 'var(--text-muted)' }}>Threat Index</span>
                     </div>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: '0.875rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Signatures Detected</h4>
-                    <div className="info-list">
-                      {report.breakdown.map((item, idx) => (
-                        <div key={idx} className="info-item" style={{ borderLeft: `4px solid ${getScoreColor(report.risk_score)}` }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{item}</span>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="signatures-summary">
+                    <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Signatures</span>
+                    {report.breakdown.slice(0, 3).map((item, idx) => (
+                      <span key={idx} className="signature-mini-tag" style={{ borderLeft: `2px solid ${getScoreColor(report.risk_score)}` }}>
+                        {item}
+                      </span>
+                    ))}
                   </div>
                 </div>
 
-                {report.domain_reports && report.domain_reports.length > 0 && (
-                  <div style={{ borderTop: '1px solid var(--panel-border)', paddingTop: '1.5rem' }}>
-                    <h4 style={{ fontSize: '0.875rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 700, marginBottom: '1rem', letterSpacing: '0.05em' }}>Domain Audit</h4>
-                    <div className="info-list">
-                      {report.domain_reports.map((dom, i) => (
-                        <div key={i} className="info-item" style={{ borderLeft: `4px solid ${getScoreColor(dom.risk_score)}`, flexDirection: 'column', gap: '0.5rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                            <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 500 }}>{dom.domain}</span>
-                            <span style={{ fontSize: '0.875rem', color: getScoreColor(dom.risk_score), fontWeight: 700 }}>{dom.risk_score}/100</span>
-                          </div>
-                          {dom.indicators.map((ind, j) => (
-                            <div key={j} style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.5rem' }}>
-                              <span style={{ color: 'var(--color-warning)' }}>-</span> {ind}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
+                {/* Urgent Action Column */}
+                <div className="action-col">
+                  <div className="report-action-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <span style={{ color: 'var(--accent-primary)', fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                      Immediate Next Move
+                    </span>
+                    <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>{report.safe_steps?.[0] || 'Use official channels.'}</strong>
                   </div>
-                )}
-              </div>
-
-              <div className="panel">
-                <h3 className="panel-title">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                  Sanitized Content
-                </h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Identifiable information was redacted before analysis.</p>
-                <div className="redacted-view">
-                  {report.redacted_text}
                 </div>
+
               </div>
             </div>
 
-            {/* Right Column */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="panel">
-                <h3 className="panel-title">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                  Contextual Action Plan
-                </h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Customized for: <strong style={{ color: 'var(--text-primary)' }}>{getSituationLabel(reportSituation)}</strong></p>
-                
-                <div>
-                  {report.safe_steps.map((step, idx) => {
-                    const cleanStep = step.replace(/^\u26a0\ufe0f\s*|\u274c\s*|\u2611\ufe0f\s*|\u26a1\ufe0f\s*/, '').replace(/\*\*/g, '');
-                    return (
-                      <div key={idx} className="step-card">
-                        <div className="step-icon-wrapper">
-                          {getStepIcon(step)}
-                        </div>
-                        <div className="step-content">
-                          <div className="step-number">Step {idx + 1}</div>
-                          <div className="step-text">{cleanStep}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {report.ai_analysis && (
-                <div className="panel">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.25rem' }}>
-                    <h3 className="panel-title" style={{ marginBottom: 0 }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/><circle cx="12" cy="12" r="3"/></svg>
-                      Gemma Analyst
-                    </h3>
-                    <span className="badge" style={{ color: report.ai_analysis.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)', flexShrink: 0 }}>
-                      {report.ai_analysis.fallback_used ? 'Local Fallback' : 'Live'}
-                    </span>
-                  </div>
-
-                  <div style={{ borderLeft: `4px solid ${getPriorityColor(report.ai_analysis.recommended_priority)}`, paddingLeft: '1rem', marginBottom: '1.25rem' }}>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: getPriorityColor(report.ai_analysis.recommended_priority), textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>
-                      Priority: {report.ai_analysis.recommended_priority || 'review'}
-                    </div>
-                    <p style={{ color: 'var(--text-primary)', fontWeight: 600, lineHeight: 1.5 }}>
-                      {report.ai_analysis.executive_summary}
-                    </p>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '0.75rem', fontSize: '0.9rem' }}>
-                      {report.ai_analysis.user_explanation}
-                    </p>
-                  </div>
-
-                  {report.ai_analysis.evidence?.length > 0 && (
-                    <div className="info-list" style={{ marginBottom: '1.25rem' }}>
-                      {report.ai_analysis.evidence.slice(0, 4).map((item, idx) => (
-                        <div key={idx} className="info-item" style={{ borderLeft: `4px solid ${getPriorityColor(item.severity)}`, flexDirection: 'column', gap: '0.35rem' }}>
-                          <strong style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>{item.signal}</strong>
-                          <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{item.why_it_matters}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {report.ai_analysis.questions?.length > 0 && (
-                    <div style={{ borderTop: '1px solid var(--panel-border)', paddingTop: '1rem' }}>
-                      <h4 style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.75rem' }}>Clarifying Questions</h4>
-                      <div className="info-list">
-                        {report.ai_analysis.questions.map((question, idx) => (
-                          <div key={idx} className="info-item">
-                            <span style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>{idx + 1}</span>
-                            <span>{question}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {report.ai_analysis.confidence_note && (
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '1rem', fontFamily: 'var(--font-mono)' }}>
-                      {report.ai_analysis.confidence_note}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="panel report-pack">
-                <div className="report-pack-header">
-                  <h3 className="panel-title" style={{ marginBottom: 0 }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                    Case Packet
-                  </h3>
-                  <div className="report-actions">
-                    <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
-                      {copySuccess ? 'Copied!' : 'Copy Report'}
-                    </button>
-                    <button className="btn btn-secondary" onClick={handleCopySummary} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
-                      {shareSuccess ? 'Copied!' : 'Copy Summary'}
-                    </button>
-                    <button className="btn btn-secondary" onClick={handleExportJson} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
-                      Export JSON
-                    </button>
-                    <button className="btn btn-secondary" onClick={handlePrintPacket} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
-                      Print PDF
-                    </button>
-                  </div>
-                </div>
-
-                <div className="report-summary-grid">
-                  <div className="report-summary-item" style={{ borderLeft: `3px solid ${getScoreColor(report.risk_score)}` }}>
-                    <span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: getScoreColor(report.risk_score) }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                      Risk
-                    </span>
-                    <strong style={{ color: getScoreColor(report.risk_score), fontSize: '1.05rem' }}>{report.verdict} // {report.risk_score}</strong>
-                  </div>
-                  <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-secondary)' }}>
-                    <span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: 'var(--accent-secondary)' }}><circle cx="12" cy="12" r="10"/><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4"/></svg>
-                      Context
-                    </span>
-                    <strong>{getSituationLabel(reportSituation)}</strong>
-                  </div>
-                  <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-primary)' }}>
-                    <span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: 'var(--accent-primary)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                      Primary Evidence
-                    </span>
-                    <strong>{getPrimaryEvidence(report)}</strong>
-                  </div>
-                  <div className="report-summary-item" style={{ borderLeft: '3px solid var(--text-secondary)' }}>
-                    <span>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: 'var(--text-secondary)' }}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>
-                      AI Analyst
-                    </span>
-                    <strong>{getAiRouteLabel(report.ai_analysis)}</strong>
-                  </div>
-                </div>
-
-                <div className="report-chip-row">
-                  {getTopScoreContributors(report).map((item, idx) => (
-                    <span key={`${item.label}-${idx}`} className="report-chip animate-pulse" style={{ borderColor: getTraceColor(item), color: getTraceColor(item), background: `${getTraceColor(item)}12` }}>
-                      +{item.impact} {item.label}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="report-action-card">
-                  <span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    Next best action
-                  </span>
-                  <strong>{report.safe_steps?.[0] || 'Use official channels before interacting.'}</strong>
-                </div>
-
-                <div className="report-preview-container">
-                  <div className="report-preview-header">
-                    <div className="window-dots">
-                      <span className="dot dot-red"></span>
-                      <span className="dot dot-yellow"></span>
-                      <span className="dot dot-green"></span>
-                    </div>
-                    <span className="window-title">CASE_PACKET_SECURE_HASH.TXT</span>
-                  </div>
-                  <pre className="redacted-view report-preview">
-                    {report.report_draft}
-                  </pre>
-                </div>
-              </div>
-
-              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                <button className="btn btn-secondary" onClick={() => { setReport(null); setInputText(''); setImageFile(null); setImagePayload(null); setMimeType(null); }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                  Analyze Another Message
+            {/* Tabbed details view */}
+            <div style={{ width: '100%' }}>
+              <div className="report-tabs">
+                <button className={`tab-btn ${reportTab === 'plan' ? 'active' : ''}`} onClick={() => setReportTab('plan')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Action Plan
+                </button>
+                <button className={`tab-btn ${reportTab === 'analysis' ? 'active' : ''}`} onClick={() => setReportTab('analysis')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                  Threat Analytics
+                </button>
+                <button className={`tab-btn ${reportTab === 'packet' ? 'active' : ''}`} onClick={() => setReportTab('packet')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  Official Case Packet
                 </button>
               </div>
 
+              <div style={{ marginTop: '1.25rem' }}>
+                
+                {/* TAB 1: ACTION PLAN */}
+                {reportTab === 'plan' && (
+                  <div className="panel" style={{ borderTop: '2px solid var(--accent-secondary)' }}>
+                    <h3 className="panel-title">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                      Contextual Action Plan
+                    </h3>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Customized for: <strong style={{ color: 'var(--text-primary)' }}>{getSituationLabel(reportSituation)}</strong></p>
+                    <div>
+                      {report.safe_steps.map((step, idx) => {
+                        const cleanStep = step.replace(/^\u26a0\ufe0f\s*|\u274c\s*|\u2611\ufe0f\s*|\u26a1\ufe0f\s*/, '').replace(/\*\*/g, '');
+                        return (
+                          <div key={idx} className="step-card">
+                            <div className="step-icon-wrapper">
+                              {getStepIcon(step)}
+                            </div>
+                            <div className="step-content">
+                              <div className="step-number">Step {idx + 1}</div>
+                              <div className="step-text">{cleanStep}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: THREAT ANALYTICS */}
+                {reportTab === 'analysis' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    
+                    {report.ai_analysis && (
+                      <div className="panel" style={{ borderLeft: `4px solid ${getPriorityColor(report.ai_analysis.recommended_priority)}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+                          <h3 className="panel-title" style={{ marginBottom: 0 }}>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            Gemma AI Analyst
+                          </h3>
+                          <span className="badge" style={{ color: report.ai_analysis.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)', flexShrink: 0 }}>
+                            {report.ai_analysis.fallback_used ? 'Local Fallback' : 'Gemma Active'}
+                          </span>
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: getPriorityColor(report.ai_analysis.recommended_priority), textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>
+                          Priority: {report.ai_analysis.recommended_priority || 'review'}
+                        </div>
+                        <p style={{ color: 'var(--text-primary)', fontWeight: 600, fontSize: '1.05rem', lineHeight: 1.5 }}>
+                          {report.ai_analysis.executive_summary}
+                        </p>
+                        <p style={{ color: 'var(--text-secondary)', marginTop: '0.75rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
+                          {report.ai_analysis.user_explanation}
+                        </p>
+                        {report.ai_analysis.confidence_note && (
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '1rem', fontFamily: 'var(--font-mono)' }}>
+                            {report.ai_analysis.confidence_note}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="dashboard-grid">
+                      {/* Left Sub-Column */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <div className="panel">
+                          <h3 className="panel-title">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M7 16V9"/><path d="M12 16V5"/><path d="M17 16v-3"/></svg>
+                            Evidence Metrics
+                          </h3>
+                          <div className="metric-grid">
+                            {getEvidenceStats(report).map((stat) => (
+                              <div key={stat.label} className="metric-item">
+                                <span className="metric-label">{stat.label}</span>
+                                <strong className="metric-value" style={{ color: stat.color }}>{stat.value}</strong>
+                                <span className="metric-note">{stat.note}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="panel">
+                          <h3 className="panel-title">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            Redacted Input Content
+                          </h3>
+                          <div className="redacted-view" style={{ fontSize: '0.82rem' }}>
+                            {report.redacted_text}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Right Sub-Column */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        {report.score_trace?.length > 0 && (
+                          <div className="panel">
+                            <h3 className="panel-title">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                              Trace Log
+                            </h3>
+                            <div className="score-trace-list">
+                              {report.score_trace.slice(0, 4).map((item, idx) => (
+                                <div key={`${item.label}-${idx}`} className="score-trace-item">
+                                  <div className="score-trace-topline">
+                                    <strong>{item.label}</strong>
+                                    <span style={{ color: getTraceColor(item) }}>+{item.impact}</span>
+                                  </div>
+                                  <div className="score-trace-bar" aria-hidden="true">
+                                    <span style={{ width: `${Math.min(Math.max(item.impact, 4), 100)}%`, background: getTraceColor(item) }}></span>
+                                  </div>
+                                  <p style={{ fontSize: '0.78rem' }}>{item.evidence}</p>
+                                  <small style={{ fontSize: '0.62rem' }}>{item.source.replace(/_/g, ' ')} - {item.calculation}</small>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {report.domain_reports && report.domain_reports.length > 0 && (
+                          <div className="panel">
+                            <h3 className="panel-title">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                              Domain Security Audit
+                            </h3>
+                            <div className="info-list">
+                              {report.domain_reports.map((dom, i) => (
+                                <div key={i} className="info-item" style={{ borderLeft: `4px solid ${getScoreColor(dom.risk_score)}`, flexDirection: 'column', gap: '0.4rem', width: '100%', padding: '0.8rem' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 500, fontSize: '0.85rem' }}>{dom.domain}</span>
+                                    <span style={{ fontSize: '0.82rem', color: getScoreColor(dom.risk_score), fontWeight: 700 }}>{dom.risk_score}/100</span>
+                                  </div>
+                                  {dom.indicators.map((ind, j) => (
+                                    <div key={j} style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', gap: '0.4rem' }}>
+                                      <span style={{ color: 'var(--color-warning)' }}>-</span> {ind}
+                                    </div>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+                {/* TAB 3: INCIDENT REPORT CASE PACKET */}
+                {reportTab === 'packet' && (
+                  <div className="panel report-pack" style={{ borderTop: '2px solid var(--accent-primary)' }}>
+                    <div className="report-pack-header">
+                      <h3 className="panel-title" style={{ marginBottom: 0 }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        Official Case Packet
+                      </h3>
+                      <div className="report-actions">
+                        <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          {copySuccess ? 'Copied!' : 'Copy Report'}
+                        </button>
+                        <button className="btn btn-secondary" onClick={handleCopySummary} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          {shareSuccess ? 'Copied!' : 'Copy Summary'}
+                        </button>
+                        <button className="btn btn-secondary" onClick={handleExportJson} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          Export JSON
+                        </button>
+                        <button className="btn btn-secondary" onClick={handlePrintPacket} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          Print PDF
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="report-summary-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                      <div className="report-summary-item" style={{ borderLeft: `3px solid ${getScoreColor(report.risk_score)}` }}>
+                        <span>Risk</span>
+                        <strong style={{ color: getScoreColor(report.risk_score) }}>{report.verdict} // {report.risk_score}</strong>
+                      </div>
+                      <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-secondary)' }}>
+                        <span>Context</span>
+                        <strong>{getSituationLabel(reportSituation)}</strong>
+                      </div>
+                      <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-primary)' }}>
+                        <span>Evidence</span>
+                        <strong>{getPrimaryEvidence(report)}</strong>
+                      </div>
+                      <div className="report-summary-item" style={{ borderLeft: '3px solid var(--text-secondary)' }}>
+                        <span>AI Analyst</span>
+                        <strong>{getAiRouteLabel(report.ai_analysis)}</strong>
+                      </div>
+                    </div>
+
+                    <div className="report-chip-row">
+                      {getTopScoreContributors(report).map((item, idx) => (
+                        <span key={`${item.label}-${idx}`} className="report-chip animate-pulse" style={{ borderColor: getTraceColor(item), color: getTraceColor(item), background: `${getTraceColor(item)}12` }}>
+                          +{item.impact} {item.label}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="report-preview-container">
+                      <div className="report-preview-header">
+                        <div className="window-dots">
+                          <span className="dot dot-red"></span>
+                          <span className="dot dot-yellow"></span>
+                          <span className="dot dot-green"></span>
+                        </div>
+                        <span className="window-title">CASE_PACKET_SECURE_HASH.TXT</span>
+                      </div>
+                      <pre className="redacted-view report-preview">
+                        {report.report_draft}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+            {/* Back button */}
+            <div style={{ textAlign: 'center', marginTop: '0.75rem' }}>
+              <button className="btn btn-secondary" onClick={() => { setReport(null); setInputText(''); setImageFile(null); setImagePayload(null); setMimeType(null); }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Analyze Another Message
+              </button>
             </div>
 
           </div>

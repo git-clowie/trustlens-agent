@@ -47,8 +47,8 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - Static hosting can point to a separate backend by editing `web/dist/config.js` after build.
    - Provider Settings can override the hosted API base URL from the browser during a static demo.
 
-6. **Judge Demo Mode** *(implemented in demo build)*
-   - Adds a guided sample sequence for the strongest recording path.
+6. **Clean Demo Samples** *(implemented in demo build)*
+   - Keeps the public sample strip simple: DHL SMS, Bank Email, and screenshot fixtures.
    - Offline Demo Mode routes AI enrichment through deterministic fallback for stable judging.
 
 ## Presentation Angle

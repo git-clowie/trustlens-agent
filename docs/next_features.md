@@ -59,13 +59,13 @@ Scope:
 * Add runtime API base override for static demo hosting.
 * Hide the provider control in public builds unless `?settings=1` or `SHOW_PROVIDER_SETTINGS: true` is used.
 
-## 6. Judge Demo + Print Packet *(implemented)*
+## 6. Clean Demo Samples + Print Packet *(implemented)*
 
 Goal: make recording and handoff smoother.
 
 Scope:
 
-* Add a judge demo sequence button for the strongest sample order.
+* Keep the strongest DHL sample as a clean one-click demo without judge-specific wording.
 * Add print/PDF output for the compact Case Packet.
 
 ## 7. Static Hosting Adapter *(implemented)*
