@@ -705,41 +705,55 @@ export default function App() {
                 
                 {/* Status Column */}
                 <div className="status-col">
-                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.4rem', color: 'var(--text-primary)' }}>Security Review</h2>
-                  <div className={`verdict-badge ${report.verdict.toLowerCase()}`} style={{ display: 'inline-block', width: 'fit-content', marginBottom: '0.65rem' }}>
+                  <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.01em' }}>Security Review</h2>
+                  <div className={`verdict-badge ${report.verdict.toLowerCase()}`}>
                     {report.verdict} Risk
                   </div>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Confidence: <strong style={{ color: 'var(--text-primary)' }}>{report.confidence}%</strong></p>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontFamily: 'var(--font-mono)' }}>
-                    Analyst: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong>
-                  </p>
+                  <div className="status-meta">
+                    <div className="status-meta-item">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      <span>Confidence: <strong>{report.confidence}%</strong></span>
+                    </div>
+                    <div className="status-meta-item">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>Analyst: <strong style={{ color: report.ai_analysis?.fallback_used ? 'var(--color-warning)' : 'var(--accent-primary)' }}>{getAiRouteLabel(report.ai_analysis)}</strong></span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Score & Signatures Column */}
                 <div className="score-col">
                   <div className="gauge-container" style={{ width: '100px', height: '100px', flexShrink: 0 }}>
-                    <svg width="100" height="100" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)' }}>
+                    <svg width="100" height="100" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', position: 'absolute', inset: 0 }}>
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--panel-bg-hover)" strokeWidth="3" />
+                      {/* Glow Layer */}
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="5.5" strokeLinecap="round" style={{ opacity: 0.18, transition: 'stroke-dasharray 1s ease-out' }} />
+                      {/* Main Stroke */}
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="3.2" strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s ease-out' }} />
                     </svg>
-                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score), fontSize: '1.75rem' }}>
-                      {report.risk_score}<span style={{ fontSize: '0.42rem', marginTop: '0.15rem', color: 'var(--text-muted)' }}>Threat Index</span>
+                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score), fontSize: '1.85rem' }}>
+                      {report.risk_score}
+                      <span style={{ fontSize: '0.62rem', marginTop: '0.2rem', color: 'var(--text-muted)' }}>Threat</span>
                     </div>
                   </div>
                   <div className="signatures-summary">
-                    <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '0.2rem' }}>Signatures</span>
-                    {report.breakdown.slice(0, 3).map((item, idx) => (
-                      <span key={idx} className="signature-mini-tag" style={{ borderLeft: `2px solid ${getScoreColor(report.risk_score)}` }}>
-                        {item}
-                      </span>
-                    ))}
+                    <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '0.1rem' }}>Signatures</span>
+                    {report.breakdown.slice(0, 3).map((item, idx) => {
+                      const cleanItem = item.replace(/^[\[\s"']+|[\]\s"']+$/g, '');
+                      return (
+                        <div key={idx} className="signature-mini-tag" style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={getScoreColor(report.risk_score)} strokeWidth="3" style={{ flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItem}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Urgent Action Column */}
                 <div className="action-col">
-                  <div className="report-action-card" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <span style={{ color: 'var(--accent-primary)', fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.25rem' }}>
+                  <div className="report-action-card" style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
+                    <span style={{ color: getScoreColor(report.risk_score), fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                       Immediate Next Move
                     </span>
