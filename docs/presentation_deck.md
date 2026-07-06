@@ -42,7 +42,7 @@ Points:
 
 * Evidence Analytics summarizes links, domain risk, social hooks, AI analyst status, confidence, and trace depth.
 * Score Trace shows structured score contributions.
-* Case Packet gives a compact reporting snapshot with first safe move, top contributors, copy summary, and JSON export.
+* Case Packet gives a compact reporting snapshot with first safe move, top contributors, copy summary, JSON export, and print/PDF output.
 
 ## Slide 5: Architecture
 
@@ -53,7 +53,7 @@ Points:
 * Google ADK-style coordinator agent.
 * FastAPI backend and React/Vite frontend.
 * Gemini Vision OCR for screenshots when configured.
-* OpenRouter Gemma analyst enrichment when configured.
+* OpenRouter Gemma 4 31B analyst enrichment when configured.
 * Deterministic fallback mode for repeatable demos.
 
 ## Slide 6: Capstone Alignment
@@ -66,7 +66,7 @@ Points:
 * MCP stdin/stdout server plus `scripts/mcp_demo.py`.
 * Privacy guardrails with local PII redaction.
 * CLI scanner and browser extension companion.
-* Built `web/dist` demo bundle, runtime static-hosting config, optional Docker helper, and docs.
+* Built `web/dist` demo bundle, Provider Settings, runtime static-hosting config, optional Docker helper, and docs.
 
 ## Slide 7: Close
 

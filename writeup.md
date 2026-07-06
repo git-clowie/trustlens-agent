@@ -65,10 +65,10 @@ The screenshot buttons use deterministic OCR markers so the demo behaves consist
 * **Google ADK:** visible coordinator agent definition and tool orchestration.
 * **MCP:** JSON-RPC stdin/stdout MCP server plus runnable proof script.
 * **Multimodal AI:** Gemini Vision OCR path for screenshots.
-* **Hosted LLM option:** OpenRouter Gemma analyst layer.
+* **Hosted LLM option:** OpenRouter Gemma 4 31B analyst layer, with local fallback.
 * **Guardrails:** local PII redaction, no link fetching, marked fallbacks.
 * **Deployability:** built `web/dist` bundle served by FastAPI, runtime `config.js` for static hosting, and optional Docker helper.
-* **UX:** Evidence Analytics, Score Trace, Local Case History, compact Case Packet, and browser extension companion.
+* **UX:** Evidence Analytics, Score Trace, Provider Settings, Offline Demo Mode, Local Case History, compact Case Packet with print/PDF, and browser extension companion.
 
 ## Verification
 

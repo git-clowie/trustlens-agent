@@ -43,17 +43,17 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ### Scene 4: Situation-Aware Planning, Export, and History (1:40 - 2:20)
 
-* **Visual on screen:** Show "Contextual Action Plan", then the compact Case Packet controls: Copy Report, Copy Summary, and Export JSON.
+* **Visual on screen:** Show "Contextual Action Plan", then the compact Case Packet controls: Copy Report, Copy Summary, Export JSON, and Print PDF.
 * **Action:** Return to the main screen and show Case History with the anonymized saved investigation.
 * **Voiceover:**
-  > "TrustLens does not stop at a scary score. The action plan changes based on what the user already did: not clicked, clicked, or shared data. The compact case packet gives a balanced snapshot for reporting, can copy a short share summary, exports a full JSON case packet, and reopens anonymized local history so repeated scams can be compared safely."
+  > "TrustLens does not stop at a scary score. The action plan changes based on what the user already did: not clicked, clicked, or shared data. The compact case packet gives a balanced snapshot for reporting, can copy a short share summary, exports JSON or PDF, and reopens anonymized local history so repeated scams can be compared safely."
 
 ---
 
 ### Scene 5: Extension, MCP & Technical Architecture (2:20 - 2:50)
 
 * **Visual on screen:** Show the `extension/` folder, then run `python scripts/mcp_demo.py` in a terminal.
-* **Action:** Mention the same security tools are available from the web app, Chrome extension, CLI, and MCP server.
+* **Action:** Open Provider Settings briefly, then mention the same security tools are available from the web app, Chrome extension, CLI, and MCP server.
 * **Voiceover:**
   > "Under the hood, TrustLens uses Google ADK to organize the agent pipeline and exposes its core security tools through an MCP server. The companion extension shows how this can protect selected text before a user clicks, while the MCP demo script proves the tool layer works without relying on a specific host client."
 

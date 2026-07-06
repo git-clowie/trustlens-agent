@@ -10,8 +10,11 @@ declare global {
 }
 
 const configuredApiBase = window.TRUSTLENS_CONFIG?.API_BASE || import.meta.env.VITE_API_BASE || '';
-const API_BASE = normalizeApiBase(configuredApiBase || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''));
+const DEFAULT_API_BASE = normalizeApiBase(configuredApiBase || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''));
 const HISTORY_KEY = 'trustlens_case_history_v1';
+const API_BASE_STORAGE_KEY = 'trustlens_api_base_v1';
+const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
+const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
 
 // Predefined samples matching backend CLI
 const SAMPLES = {
@@ -63,6 +66,12 @@ const SCREENSHOT_FIXTURES = {
     situation: 'clicked_only',
   },
 };
+
+const JUDGE_DEMO_SEQUENCE = [
+  { label: 'DHL SMS', mode: 'text', key: 'courier' },
+  { label: 'Bank Screen', mode: 'image', key: 'bank' },
+  { label: 'QR Screen', mode: 'image', key: 'qr' },
+] as const;
 
 interface TraceStep {
   step: string;
@@ -146,11 +155,16 @@ export default function App() {
   const [reportSituation, setReportSituation] = useState('before_click');
   const [loading, setLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showProviderSettings, setShowProviderSettings] = useState(false);
   const [report, setReport] = useState<InvestigationReport | null>(null);
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
   const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false, openRouter: false, model: '', apiReachable: false });
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [apiBase, setApiBase] = useState(loadStoredApiBase);
+  const [apiBaseDraft, setApiBaseDraft] = useState(loadStoredApiBase);
+  const [offlineDemoMode, setOfflineDemoMode] = useState(() => loadStoredBoolean(OFFLINE_DEMO_STORAGE_KEY));
+  const [demoStepIndex, setDemoStepIndex] = useState(0);
   const [caseHistory, setCaseHistory] = useState<CaseRecord[]>([]);
   const [imageFile, setImageFile] = useState<string | null>(null);
   const [imagePayload, setImagePayload] = useState<string | null>(null);
@@ -167,7 +181,7 @@ export default function App() {
 
   // Load health check on mount
   useEffect(() => {
-    fetch(`${API_BASE}/api/health`)
+    fetch(buildApiUrl(apiBase, '/api/health'))
       .then((res) => {
         if (!res.ok) throw new Error('Health check failed.');
         return res.json();
@@ -177,7 +191,7 @@ export default function App() {
           adk: data.adk_available,
           keySet: data.api_key_set,
           openRouter: data.openrouter_key_set,
-          model: data.openrouter_model || 'google/gemma-4-31b-it:free',
+          model: data.openrouter_model || DEFAULT_OPENROUTER_MODEL,
           apiReachable: true
         });
       })
@@ -185,7 +199,7 @@ export default function App() {
         setHealthStatus((prev) => ({ ...prev, apiReachable: false }));
         console.warn("Could not reach backend health endpoint. Using local fallbacks.");
       });
-  }, []);
+  }, [apiBase]);
 
   const selectSample = (key: keyof typeof SAMPLES) => {
     const sample = SAMPLES[key];
@@ -210,6 +224,49 @@ export default function App() {
     setReport(null);
     setActiveTrace([]);
     handleInvestigate('', fixture.marker, 'image/svg+xml', fixture.situation);
+  };
+
+  const runJudgeDemoStep = () => {
+    const nextStep = JUDGE_DEMO_SEQUENCE[demoStepIndex % JUDGE_DEMO_SEQUENCE.length];
+    setDemoStepIndex((prev) => prev + 1);
+    if (nextStep.mode === 'text') {
+      selectSample(nextStep.key);
+    } else {
+      selectImageSample(nextStep.key);
+    }
+  };
+
+  const saveApiBase = () => {
+    const nextBase = normalizeApiBase(apiBaseDraft.trim());
+    setApiBase(nextBase);
+    setApiBaseDraft(nextBase);
+    try {
+      window.localStorage.setItem(API_BASE_STORAGE_KEY, nextBase);
+    } catch {
+      // API base persistence is a convenience for static demo hosting.
+    }
+  };
+
+  const resetApiBase = () => {
+    setApiBase(DEFAULT_API_BASE);
+    setApiBaseDraft(DEFAULT_API_BASE);
+    try {
+      window.localStorage.removeItem(API_BASE_STORAGE_KEY);
+    } catch {
+      // Ignore locked-down localStorage.
+    }
+  };
+
+  const toggleOfflineDemoMode = () => {
+    setOfflineDemoMode((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(OFFLINE_DEMO_STORAGE_KEY, String(next));
+      } catch {
+        // Ignore locked-down localStorage.
+      }
+      return next;
+    });
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -328,14 +385,15 @@ export default function App() {
     setActiveTrace(initialTrace);
 
     try {
-      const response = await fetch(`${API_BASE}/api/investigate`, {
+      const response = await fetch(buildApiUrl(apiBase, '/api/investigate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           text: textToScan, 
           situation: situationToScan,
           image: imageToScan,
-          mime_type: mimeToScan
+          mime_type: mimeToScan,
+          demo_offline: offlineDemoMode
         })
       });
 
@@ -406,6 +464,11 @@ export default function App() {
     URL.revokeObjectURL(url);
   };
 
+  const handlePrintPacket = () => {
+    if (!report) return;
+    window.print();
+  };
+
   // State machine derivation
   const appState = loading ? 'analyzing' : (report ? 'result' : 'idle');
 
@@ -424,6 +487,16 @@ export default function App() {
           </h1>
         </div>
         <div className="status-bar">
+          {offlineDemoMode && (
+            <span className="badge" style={{ color: 'var(--color-warning)' }}>
+              <span className="status-dot inactive"></span>
+              Offline Demo
+            </span>
+          )}
+          <button className="badge" onClick={() => setShowProviderSettings(true)} style={{ cursor: 'pointer', background: 'var(--panel-bg)', color: 'var(--text-secondary)' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06A2 2 0 1 1 7.03 3.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.4.6.8 1 1 .34.19.72.3 1.1.3H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.7z"/></svg>
+            Provider
+          </button>
           <button className="badge" onClick={() => setShowHelp(true)} style={{ cursor: 'pointer', background: 'var(--panel-bg)', color: 'var(--accent-primary)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             App Info
@@ -515,6 +588,9 @@ export default function App() {
             <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Try a sample case:</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: 'var(--accent-primary)' }} onClick={runJudgeDemoStep}>
+                  Judge Demo: {JUDGE_DEMO_SEQUENCE[demoStepIndex % JUDGE_DEMO_SEQUENCE.length].label}
+                </button>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('courier')}>DHL SMS</button>
                 <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('bank')}>Bank Email</button>
                 {Object.entries(SCREENSHOT_FIXTURES).map(([key, fixture]) => (
@@ -823,6 +899,9 @@ export default function App() {
                     <button className="btn btn-secondary" onClick={handleExportJson} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
                       Export JSON
                     </button>
+                    <button className="btn btn-secondary" onClick={handlePrintPacket} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                      Print PDF
+                    </button>
                   </div>
                 </div>
 
@@ -925,6 +1004,61 @@ export default function App() {
         </div>
       )}
 
+      {showProviderSettings && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', padding: '1rem' }}>
+          <div className="panel" style={{ maxWidth: '680px', width: '100%', position: 'relative', margin: 0, borderTop: '2px solid var(--accent-secondary)' }}>
+            <button onClick={() => setShowProviderSettings(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--panel-border)', borderRadius: '4px', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <h3 className="panel-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--accent-secondary)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Provider Settings
+            </h3>
+
+            <div className="settings-grid">
+              <div className="settings-field full">
+                <label htmlFor="api-base">API Base URL</label>
+                <input
+                  id="api-base"
+                  value={apiBaseDraft}
+                  onChange={(event) => setApiBaseDraft(event.target.value)}
+                  placeholder="https://your-trustlens-api.example.com"
+                />
+              </div>
+
+              <div className="settings-card">
+                <span>Backend</span>
+                <strong style={{ color: healthStatus.apiReachable ? 'var(--color-safe)' : 'var(--color-warning)' }}>
+                  {healthStatus.apiReachable ? 'Connected' : 'Disconnected'}
+                </strong>
+              </div>
+              <div className="settings-card">
+                <span>OpenRouter</span>
+                <strong style={{ color: healthStatus.openRouter && !offlineDemoMode ? 'var(--accent-primary)' : 'var(--color-warning)' }}>
+                  {offlineDemoMode ? 'Demo Fallback' : healthStatus.openRouter ? 'Live' : 'Local Fallback'}
+                </strong>
+              </div>
+              <div className="settings-card full">
+                <span>Gemma Model</span>
+                <strong>{healthStatus.model || DEFAULT_OPENROUTER_MODEL}</strong>
+              </div>
+            </div>
+
+            <div className="settings-actions">
+              <button className="btn btn-secondary" onClick={saveApiBase}>
+                Save API
+              </button>
+              <button className="btn btn-secondary" onClick={resetApiBase}>
+                Reset API
+              </button>
+              <button className="btn btn-secondary" onClick={toggleOfflineDemoMode} style={{ color: offlineDemoMode ? 'var(--color-warning)' : 'var(--text-secondary)' }}>
+                Offline Demo: {offlineDemoMode ? 'On' : 'Off'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer style={{ marginTop: '4rem', padding: '2rem 1rem 3rem 1rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
           <div className="badge">
@@ -936,12 +1070,12 @@ export default function App() {
             MCP Tools: Implemented
           </div>
           <div className="badge" title={healthStatus.model || 'OpenRouter model'}>
-            <span className={`status-dot ${healthStatus.openRouter ? 'active' : 'inactive'}`}></span>
-            Gemma Analyst: {healthStatus.openRouter ? 'Live' : 'Local Fallback'}
+            <span className={`status-dot ${healthStatus.openRouter && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
+            Gemma Analyst: {offlineDemoMode ? 'Demo Fallback' : healthStatus.openRouter ? 'Live' : 'Local Fallback'}
           </div>
           <div className="badge">
-            <span className={`status-dot ${healthStatus.keySet ? 'active' : 'inactive'}`}></span>
-            Gemini OCR: {healthStatus.keySet ? 'Live' : 'Fixture Fallback'}
+            <span className={`status-dot ${healthStatus.keySet && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
+            Gemini OCR: {offlineDemoMode ? 'Demo Fallback' : healthStatus.keySet ? 'Live' : 'Fixture Fallback'}
           </div>
           <div className="badge">
             <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
@@ -959,6 +1093,27 @@ export default function App() {
 // Helper colors
 function normalizeApiBase(value: string) {
   return value.replace(/\/+$/, '');
+}
+
+function buildApiUrl(apiBase: string, path: string) {
+  const normalizedBase = normalizeApiBase(apiBase);
+  return normalizedBase ? `${normalizedBase}${path}` : path;
+}
+
+function loadStoredApiBase() {
+  try {
+    return window.localStorage.getItem(API_BASE_STORAGE_KEY) || DEFAULT_API_BASE;
+  } catch {
+    return DEFAULT_API_BASE;
+  }
+}
+
+function loadStoredBoolean(key: string) {
+  try {
+    return window.localStorage.getItem(key) === 'true';
+  } catch {
+    return false;
+  }
 }
 
 function getImagePreviewSrc(value: string, mimeType?: string | null) {

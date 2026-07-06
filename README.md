@@ -11,17 +11,18 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 ## Key Features
 
 1. **Multimodal Vision OCR**: Screenshot messages can be transcribed with Gemini Vision before analysis.
-2. **OpenRouter Gemma Analyst**: Optional hosted Gemma enrichment adds plain-language explanation, evidence notes, clarifying questions, and action priority.
+2. **OpenRouter Gemma 4 31B Analyst**: Optional hosted Gemma enrichment adds plain-language explanation, evidence notes, clarifying questions, and action priority.
 3. **Marked Fallback Mode**: If Gemini or OpenRouter is unavailable, TrustLens uses deterministic fallbacks and clearly labels them.
 4. **Evidence Analytics + Score Trace**: Shows link count, maximum domain risk, social hooks, AI analyst status, confidence, trace depth, and structured score contributions.
 5. **Local Case History**: Stores anonymized investigations in browser localStorage so users can reopen recent cases.
-6. **Compact Case Packet**: Shows a balanced reporting snapshot with risk, context, primary evidence, top score contributors, copy summary, and JSON export.
+6. **Compact Case Packet**: Shows a balanced reporting snapshot with risk, context, primary evidence, top score contributors, copy summary, JSON export, and print/PDF output.
 7. **Privacy-First PII Redaction**: Masks emails, phone numbers, cards, CNPs, and SSNs before external model enrichment.
 8. **Offline Domain Inspection**: Detects typosquatting, brand impersonation, suspicious TLDs, hyphen-heavy domains, and digit-heavy domains without opening links.
 9. **Situation-Aware Safety Planner**: Adjusts next steps for prevention, clicked-link inspection, or compromised-data recovery.
 10. **Chrome Extension Companion**: Adds a local pre-click browser workflow for selected suspicious text.
 11. **Synthetic Demo Fixtures**: Includes safe screenshot and message fixtures for repeatable recordings.
-12. **MCP Tool Server + Demo Script**: Exposes the core scanner tools to MCP-compatible clients and includes a JSON-RPC proof script.
+12. **Provider Settings + Offline Demo Mode**: Lets static demos point to a hosted backend, shows model/runtime state, and can force deterministic fallback mode.
+13. **MCP Tool Server + Demo Script**: Exposes the core scanner tools to MCP-compatible clients and includes a JSON-RPC proof script.
 
 ## Architecture
 
@@ -64,7 +65,7 @@ Create `.env` from `.env.example` and add the providers you want:
 ```bash
 GEMINI_API_KEY=your_gemini_key_for_screenshot_ocr
 OPENROUTER_API_KEY=your_openrouter_key_for_gemma_analysis
-OPENROUTER_MODEL=google/gemma-4-31b-it:free
+OPENROUTER_MODEL=google/gemma-4-31b-it
 ```
 
 Both keys are optional. The app still runs without them and marks fallback mode in the UI.
@@ -88,9 +89,9 @@ TrustLens keeps provider keys server-side.
 | Capability | Provider | Env var | Fallback |
 | :--- | :--- | :--- | :--- |
 | Screenshot OCR | Gemini 2.5 Flash | `GEMINI_API_KEY` | Safe demo OCR fixtures |
-| Analyst enrichment | OpenRouter Gemma | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Deterministic evidence summary |
+| Analyst enrichment | OpenRouter Gemma 4 31B | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL` | Deterministic evidence summary |
 
-The React client never receives provider keys. It calls the FastAPI backend and displays whether Gemini/OpenRouter are live or in fallback mode.
+The default OpenRouter route is `google/gemma-4-31b-it`, with free/26B fallbacks if routing fails. The React client never receives provider keys. It calls the FastAPI backend and displays whether Gemini/OpenRouter are live or in fallback mode.
 
 ## Frontend Development
 
@@ -123,6 +124,8 @@ window.TRUSTLENS_CONFIG = {
 ```
 
 Gemini and OpenRouter keys must remain on the backend. The static frontend only stores the public API base URL.
+
+The built dashboard also includes a Provider Settings modal. It can override the API base URL in browser localStorage, show the active Gemma model, and enable Offline Demo Mode for deterministic fallback runs.
 
 ## CLI Scanner
 
@@ -227,7 +230,7 @@ docker run --env-file .env -p 8000:8000 trustlens
 | MCP Server | JSON-RPC MCP server exposing PII redaction, link extraction, domain inspection, social engineering detection, scoring, planning, reporting, and a runnable demo script. |
 | Safety & Privacy | Local PII redaction, zero-trust offline domain parsing, no link opening, and marked model fallbacks. |
 | Deployability | Single FastAPI app serving the built React demo, plus Docker-ready files. |
-| User Experience | Evidence analytics, structured score trace, Gemma analyst panel, local case history, compact case packet, Chrome extension companion, export/share controls, and situation-aware recovery steps. |
+| User Experience | Evidence analytics, structured score trace, Gemma analyst panel, provider settings, offline demo mode, local case history, compact case packet, print/PDF, Chrome extension companion, export/share controls, and situation-aware recovery steps. |
 
 ## Verification
 

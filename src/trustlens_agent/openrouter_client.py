@@ -4,9 +4,11 @@ import time
 import urllib.error
 import urllib.request
 
-DEFAULT_OPENROUTER_MODEL = "google/gemma-4-31b-it:free"
+DEFAULT_OPENROUTER_MODEL = "google/gemma-4-31b-it"
 OPENROUTER_MODEL_FALLBACKS = (
     DEFAULT_OPENROUTER_MODEL,
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it",
     "google/gemma-4-26b-a4b-it:free",
     "google/gemma-3-27b-it",
 )
@@ -187,9 +189,20 @@ def generate_gemma_analysis(
     domain_reports: list,
     social_engineering_indicators: list,
     safe_steps: list,
+    force_fallback: bool = False,
 ) -> dict:
     api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
     primary_model = os.getenv("OPENROUTER_MODEL", DEFAULT_OPENROUTER_MODEL).strip()
+
+    if force_fallback:
+        return _offline_analysis(
+            "Offline demo mode is enabled.",
+            situation,
+            summary,
+            domain_reports,
+            social_engineering_indicators,
+            safe_steps,
+        )
 
     if not api_key:
         return _offline_analysis(

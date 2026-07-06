@@ -206,7 +206,7 @@ label {
   margin-bottom: 0.5rem;
 }
 
-textarea, select {
+input, textarea, select {
   width: 100%;
   background: rgba(0,0,0,0.3);
   border: 1px solid var(--panel-border);
@@ -219,7 +219,7 @@ textarea, select {
   box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
 }
 
-textarea:focus, select:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent-primary);
   background: rgba(0, 242, 254, 0.02);
@@ -795,6 +795,50 @@ button.info-item {
   text-shadow: none;
 }
 
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.settings-field.full,
+.settings-card.full {
+  grid-column: 1 / -1;
+}
+
+.settings-card {
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.28);
+  padding: 1rem;
+  min-width: 0;
+}
+
+.settings-card span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.settings-card strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
 /* Utilities */
 .spinner {
   width: 20px;
@@ -855,5 +899,55 @@ button.info-item {
   }
   .report-actions .btn {
     flex: 1 1 9rem;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #111827;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .report-pack,
+  .report-pack * {
+    visibility: visible;
+  }
+
+  .report-pack {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    margin: 0;
+    background: #fff;
+    color: #111827;
+    border: none;
+    box-shadow: none;
+  }
+
+  .report-pack::before,
+  .report-actions {
+    display: none !important;
+  }
+
+  .report-summary-item,
+  .report-action-card,
+  .redacted-view,
+  .report-chip {
+    background: #fff !important;
+    color: #111827 !important;
+    border-color: #d1d5db !important;
+    text-shadow: none !important;
+  }
+
+  .report-preview {
+    max-height: none;
+    overflow: visible;
   }
 }

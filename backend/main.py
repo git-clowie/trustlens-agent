@@ -36,6 +36,7 @@ class InvestigationRequest(BaseModel):
     situation: str
     image: Optional[str] = None
     mime_type: Optional[str] = None
+    demo_offline: bool = False
 
 @app.post("/api/investigate")
 async def investigate(req: InvestigationRequest):
@@ -52,7 +53,8 @@ async def investigate(req: InvestigationRequest):
             raw_message=req.text or "",
             situation=req.situation,
             image_base64=req.image,
-            mime_type=req.mime_type
+            mime_type=req.mime_type,
+            demo_offline=req.demo_offline,
         )
         return report
     except Exception as e:

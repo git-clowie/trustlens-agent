@@ -57,7 +57,7 @@ def get_ocr_fixture_text(image_base64: str) -> str | None:
             return text
     return None
 
-def ocr_screenshot(image_base64: str, mime_type: str) -> str:
+def ocr_screenshot(image_base64: str, mime_type: str, force_local: bool = False) -> str:
     """
     Decodes a base64 message screenshot and transcribes it multimodally
     using Gemini 2.5 Flash.
@@ -65,6 +65,10 @@ def ocr_screenshot(image_base64: str, mime_type: str) -> str:
     fixture_text = get_ocr_fixture_text(image_base64)
     if fixture_text:
         return fixture_text
+
+    if force_local:
+        print("[!] Offline demo mode enabled. Using local OCR fallback.")
+        return "Stimate client Posta Romana, aveti un pachet retinut in depozit. Achitati taxa de 9.40 RON pe https://posta-romana-tarife.info pentru livrare."
 
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -146,7 +150,14 @@ class TrustLensCoordinatorAgent:
         self.has_adk = HAS_ADK
         self.adk_agent = trustlens_adk_agent
 
-    def run_investigation(self, raw_message: str, situation: str, image_base64: str = None, mime_type: str = None) -> dict:
+    def run_investigation(
+        self,
+        raw_message: str,
+        situation: str,
+        image_base64: str = None,
+        mime_type: str = None,
+        demo_offline: bool = False,
+    ) -> dict:
         trace = []
         extracted_text = None
         
@@ -158,7 +169,7 @@ class TrustLensCoordinatorAgent:
                 'detail': 'Decoding screenshot and transcribing text via Gemini Vision...'
             })
             time.sleep(0.6)
-            extracted_text = ocr_screenshot(image_base64, mime_type)
+            extracted_text = ocr_screenshot(image_base64, mime_type, force_local=demo_offline)
             raw_message = extracted_text
             trace[-1]['status'] = 'completed'
             display_text = raw_message[:60] + "..." if len(raw_message) > 60 else raw_message
@@ -260,6 +271,7 @@ class TrustLensCoordinatorAgent:
             domain_reports=domain_reports,
             social_engineering_indicators=se_indicators,
             safe_steps=safe_steps,
+            force_fallback=demo_offline,
         )
         trace[-1]['status'] = 'completed'
         if ai_analysis.get('fallback_used'):

@@ -47,7 +47,7 @@ Scope:
 * Environment variable checklist for Gemini OCR and OpenRouter Gemma.
 * Dockerfile and `.dockerignore` are included, but the primary handoff remains `web/dist` plus the FastAPI app for simple demo hosting.
 
-## 5. Provider Settings Panel
+## 5. Provider Settings Panel *(implemented)*
 
 Goal: make demo state transparent without exposing secrets.
 
@@ -55,9 +55,19 @@ Scope:
 
 * Show selected OpenRouter model.
 * Show live/fallback status.
-* Add a "run offline demo mode" toggle that only changes UI/sample behavior, not server secrets.
+* Add a "run offline demo mode" toggle that routes model/OCR enrichment to deterministic local fallback.
+* Add runtime API base override for static demo hosting.
 
-## 6. Static Hosting Adapter *(implemented)*
+## 6. Judge Demo + Print Packet *(implemented)*
+
+Goal: make recording and handoff smoother.
+
+Scope:
+
+* Add a judge demo sequence button for the strongest sample order.
+* Add print/PDF output for the compact Case Packet.
+
+## 7. Static Hosting Adapter *(implemented)*
 
 Goal: make a purely static public demo possible without exposing provider keys.
 

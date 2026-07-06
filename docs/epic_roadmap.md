@@ -39,12 +39,17 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - The UI renders the highest domain contribution, text persuasion hooks, and synthesis escalation as auditable score cards.
 
 4. **Exportable Case Packet** *(implemented in demo build)*
-   - The web UI can copy the compact incident snapshot, copy a short share summary, and export the full JSON case packet.
+   - The web UI can copy the compact incident snapshot, copy a short share summary, export the full JSON case packet, and print the packet to PDF.
 
-5. **Deployment Story** *(helper prepared)*
+5. **Deployment Story** *(implemented in demo build)*
    - Dockerfile and `.dockerignore` are included for optional containerized local hosting.
    - Primary demo handoff remains the built `web/dist` bundle served by the FastAPI app.
    - Static hosting can point to a separate backend by editing `web/dist/config.js` after build.
+   - Provider Settings can override the hosted API base URL from the browser during a static demo.
+
+6. **Judge Demo Mode** *(implemented in demo build)*
+   - Adds a guided sample sequence for the strongest recording path.
+   - Offline Demo Mode routes AI enrichment through deterministic fallback for stable judging.
 
 ## Presentation Angle
 
