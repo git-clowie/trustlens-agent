@@ -17,7 +17,7 @@ from trustlens_agent.openrouter_client import DEFAULT_OPENROUTER_MODEL
 app = FastAPI(
     title="TrustLens Security Agent API",
     description="Backend API for the TrustLens AI security concierge agent.",
-    version="1.0.1"
+    version="1.0.2"
 )
 
 # Enable CORS for local Vite development frontend

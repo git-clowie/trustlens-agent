@@ -19,7 +19,9 @@ const HISTORY_KEY = 'trustlens_case_history_v2';
 const API_BASE_STORAGE_KEY = 'trustlens_api_base_v1';
 const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
 const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
+const TRACE_STEP_DELAY_MS = 320;
+const TRACE_FINAL_DELAY_MS = 180;
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || './';
 
 function publicAsset(path: string) {
@@ -158,6 +160,7 @@ export default function App() {
   const [report, setReport] = useState<InvestigationReport | null>(null);
   const [activeTrace, setActiveTrace] = useState<TraceStep[]>([]);
   const [healthStatus, setHealthStatus] = useState({ adk: false, keySet: false, openRouter: false, model: '', apiReachable: false });
+  const [healthChecked, setHealthChecked] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [apiBase, setApiBase] = useState(loadStoredApiBase);
@@ -193,9 +196,11 @@ export default function App() {
           model: data.openrouter_model || DEFAULT_OPENROUTER_MODEL,
           apiReachable: true
         });
+        setHealthChecked(true);
       })
       .catch(() => {
         setHealthStatus((prev) => ({ ...prev, apiReachable: false }));
+        setHealthChecked(true);
         console.warn("Could not reach backend health endpoint. Using local fallbacks.");
       });
   }, [apiBase]);
@@ -343,6 +348,25 @@ export default function App() {
     }
   };
 
+  const makeTraceTimeline = (trace: TraceStep[]) => trace.map((step, index) => ({
+    ...step,
+    status: index === 0 ? ('running' as const) : ('pending' as const),
+  }));
+
+  const playTrace = async (trace: TraceStep[]) => {
+    setActiveTrace(makeTraceTimeline(trace));
+    for (let i = 0; i < trace.length; i++) {
+      await new Promise((resolve) => setTimeout(resolve, TRACE_STEP_DELAY_MS));
+      setActiveTrace((prev) => {
+        const next = [...prev];
+        if (next[i]) next[i] = { ...trace[i], status: 'completed' };
+        if (next[i + 1]) next[i + 1] = { ...trace[i + 1], status: 'running' };
+        return next;
+      });
+    }
+    await new Promise((resolve) => setTimeout(resolve, TRACE_FINAL_DELAY_MS));
+  };
+
   const handleInvestigate = async (
     overrideText?: string,
     overrideImage?: string | null,
@@ -401,25 +425,14 @@ export default function App() {
       const data: InvestigationReport = await response.json();
       if (data.extracted_text) setInputText(data.extracted_text);
 
-      // Play trace
-      for (let i = 0; i < data.trace.length; i++) {
-        await new Promise((resolve) => setTimeout(resolve, 350));
-        setActiveTrace((prev) => {
-          const next = [...prev];
-          if (next[i]) next[i] = { ...data.trace[i], status: 'completed' };
-          if (next[i + 1]) next[i + 1].status = 'running';
-          return next;
-        });
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      await playTrace(data.trace);
       setReport(data);
       persistCase(data, situationToScan);
     } catch (err) {
       console.warn('TrustLens API unavailable; using browser demo fallback.', err);
       const demoReport = buildClientDemoReport(textToScan, situationToScan, typeof imageToScan === 'string' ? imageToScan : null);
       if (demoReport.extracted_text) setInputText(demoReport.extracted_text);
-      setActiveTrace(demoReport.trace);
+      await playTrace(demoReport.trace);
       setReport(demoReport);
       persistCase(demoReport, situationToScan);
     } finally {
@@ -518,6 +531,12 @@ export default function App() {
             <span className="badge" style={{ color: 'var(--color-warning)' }}>
               <span className="status-dot inactive"></span>
               Offline Demo
+            </span>
+          )}
+          {healthChecked && !healthStatus.apiReachable && !offlineDemoMode && (
+            <span className="badge static-demo-badge" title="Backend API is not connected, so reports use the browser demo fallback.">
+              <span className="status-dot inactive"></span>
+              Browser Demo
             </span>
           )}
           {PROVIDER_SETTINGS_ENABLED && (

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 - 2026-07-06
+
+Public demo clarity and polish release.
+
+* Animated the browser fallback investigation timeline so static hosting no longer jumps straight to a completed report.
+* Added a visible Browser Demo badge when the backend API is not reachable.
+* Fixed quick sample button edge clipping in the compact sample strip.
+
 ## 1.0.1 - 2026-07-06
 
 Public demo and capstone handoff release.

@@ -10,7 +10,7 @@ Phishing attacks and social engineering scams often hit users in the critical se
 
 **TrustLens Agent** is an AI Security Concierge that inspects suspicious SMS, email, chat, DM, and screenshot threats. It redacts private data, checks links without visiting them, detects social engineering tactics, explains the risk score, and generates a situation-aware safety plan.
 
-Current release: `v1.0.1`. The app can run locally through FastAPI or as a static public demo at `https://pixek.xyz/trustlens/`, with live Gemini/OpenRouter analysis enabled only through a server-side backend.
+Current release: `v1.0.2`. The app can run locally through FastAPI or as a static public demo at `https://pixek.xyz/trustlens/`, with live Gemini/OpenRouter analysis enabled only through a server-side backend.
 
 TrustLens supports three user states:
 

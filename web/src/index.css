@@ -278,15 +278,17 @@ header {
 }
 
 .sample-grid {
-  width: min(100%, 720px);
+  width: min(100%, 760px);
   display: flex;
   flex-wrap: nowrap;
   justify-content: center;
   gap: 0.45rem;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding-bottom: 0.1rem;
+  padding: 0.16rem 0.45rem 0.22rem;
+  scroll-padding-inline: 0.45rem;
   scrollbar-width: none;
+  box-sizing: border-box;
 }
 
 .sample-grid::-webkit-scrollbar {
@@ -302,6 +304,7 @@ header {
   line-height: 1;
   white-space: nowrap;
   border-radius: 7px;
+  scroll-margin-inline: 0.35rem;
 }
 
 .history-panel {
