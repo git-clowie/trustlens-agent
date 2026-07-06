@@ -53,7 +53,9 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
   </tr>
 </table>
 
-## Product Preview
+## Live App Screenshots
+
+Real captures from the working TrustLens dashboard, kept here to show the implemented product beyond the pitch deck.
 
 <table>
   <tr>
