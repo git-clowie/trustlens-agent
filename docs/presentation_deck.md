@@ -2,6 +2,14 @@
 
 Slide-by-slide outline for a concise capstone presentation.
 
+## Tracked Visual Assets
+
+Use these committed assets for GitHub, Kaggle, and video handoff:
+
+* Repository cover: `docs/assets/cover/trustlens-cover.png`
+* README product gallery: `docs/assets/gallery/`
+* Full visual deck exports: `docs/assets/presentation/trustlens-slide-01.png` through `trustlens-slide-08.png`
+
 ## Slide 1: Title
 
 Visual: TrustLens banner, dashboard hero, or public demo URL.

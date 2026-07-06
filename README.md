@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./docs/assets/banner.jpg" alt="TrustLens Banner" width="100%" style="border-radius: 12px;" />
+  <img src="./docs/assets/cover/trustlens-cover.png" alt="TrustLens cover: investigate first, click never" width="100%" />
 </div>
 
 # TrustLens Agent
@@ -31,6 +31,37 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 11. **Synthetic Demo Fixtures**: Includes safe screenshot and message fixtures for repeatable recordings.
 12. **Provider Settings + Offline Demo Mode**: Lets static demos point to a hosted backend, shows model/runtime state, and can force deterministic fallback mode.
 13. **MCP Tool Server + Demo Script**: Exposes the core scanner tools to MCP-compatible clients and includes a JSON-RPC proof script.
+
+## Product Preview
+
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/assets/gallery/01-dashboard-desktop.png" alt="TrustLens dashboard input workspace" /></td>
+    <td width="50%"><img src="./docs/assets/gallery/03-security-review.png" alt="TrustLens security review report" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Suspicious message workspace</strong></td>
+    <td align="center"><strong>Contextual security review</strong></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/assets/gallery/04-threat-analytics.png" alt="TrustLens threat analytics and evidence metrics" /></td>
+    <td width="50%"><img src="./docs/assets/gallery/05-case-packet.png" alt="TrustLens official case packet export view" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Threat analytics</strong></td>
+    <td align="center"><strong>Official case packet</strong></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="./docs/assets/gallery/06-prize-screen-tablet.png" alt="TrustLens prize scam screenshot review on tablet" /></td>
+    <td width="50%"><img src="./docs/assets/gallery/07-qr-screen-mobile.png" alt="TrustLens QR phishing screenshot review on mobile" /></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Screenshot scam fixture</strong></td>
+    <td align="center"><strong>Mobile recovery flow</strong></td>
+  </tr>
+</table>
+
+The full visual presentation deck is tracked in `docs/assets/presentation/` for GitHub, Kaggle, and video-production handoff.
 
 ## Architecture
 
