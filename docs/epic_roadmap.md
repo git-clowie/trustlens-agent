@@ -24,6 +24,11 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - Added a short terminal script that sends MCP JSON-RPC requests and prints tool responses.
    - This proves the MCP layer without requiring Claude Desktop or Cursor setup during the demo.
 
+6. **Public Static Demo** *(implemented in v1.0.1)*
+   - The `web/dist` bundle now works from root or subpath hosting such as `/trustlens/`.
+   - Runtime config stays public-safe while provider keys remain backend-only.
+   - Browser fallback samples keep the demo usable even when no hosted API is connected.
+
 ## Technical Credibility Boosts
 
 1. **Package & Verify**
@@ -51,6 +56,10 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - Keeps the public sample strip simple: DHL SMS, PayPal Alert, and screenshot fixtures.
    - Offline Demo Mode routes AI enrichment through deterministic fallback for stable judging.
 
+7. **Public Repo Polish** *(implemented in v1.0.1)*
+   - Added changelog, frontend README, public demo runbook, and release notes for handoff.
+   - Refreshed the in-app App Info modal so the public demo explains workflow, privacy, and runtime state.
+
 ## Presentation Angle
 
 The strongest framing is:
@@ -58,3 +67,9 @@ The strongest framing is:
 > "TrustLens is not a link checker. It is a context-aware recovery agent that translates suspicious-message evidence into human-safe next steps."
 
 That makes it feel more original than another phishing classifier.
+
+## Next Presentation Work
+
+* Build a concise final deck from `docs/presentation_deck.md`.
+* Record a 2-to-3 minute demo with the path in `docs/video_script.md`.
+* Capture one clean terminal segment for `python scripts/mcp_demo.py`.

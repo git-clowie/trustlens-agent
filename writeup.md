@@ -10,6 +10,8 @@ Phishing attacks and social engineering scams often hit users in the critical se
 
 **TrustLens Agent** is an AI Security Concierge that inspects suspicious SMS, email, chat, DM, and screenshot threats. It redacts private data, checks links without visiting them, detects social engineering tactics, explains the risk score, and generates a situation-aware safety plan.
 
+Current release: `v1.0.1`. The app can run locally through FastAPI or as a static public demo at `https://pixek.xyz/trustlens/`, with live Gemini/OpenRouter analysis enabled only through a server-side backend.
+
 TrustLens supports three user states:
 
 * **Prevention:** the user has not clicked.
@@ -39,6 +41,7 @@ TrustLens can be used from multiple surfaces:
 * **MCP server:** `trustlens-mcp` or `python -m trustlens_agent.mcp_server`.
 * **MCP demo script:** `python scripts/mcp_demo.py`.
 * **Chrome companion extension:** `extension/`, loaded unpacked, for selected webpage text.
+* **Static web bundle:** `release/trustlens-web-dist.zip`, uploadable to root or subfolder hosting.
 
 ## Safety And Privacy
 
@@ -49,6 +52,7 @@ TrustLens is designed around safe handling:
 * PII redaction runs before external model enrichment.
 * The UI clearly marks Gemini/OpenRouter live mode versus fallback mode.
 * Local case history stores sanitized reports, not raw OCR text.
+* Static hosting never exposes provider keys and can still run deterministic browser fallback samples.
 
 ## Demo Assets
 
@@ -67,7 +71,7 @@ The screenshot buttons use deterministic OCR markers so the demo behaves consist
 *   **Multimodal AI Integration**: Employs Gemini Vision for OCR decoding of suspicious screenshot attachments.
 *   **Hosted LLM Support**: Leverages OpenRouter API (Gemma model) with robust, tested local fallback capabilities.
 *   **Security & Guardrails**: Enforces local offline regex-based PII masking and zero-network domain inspection patterns.
-*   **Deployability**: Portably packages the frontend (`web/dist` bundle) served cleanly via the FastAPI backend or Docker.
+*   **Deployability**: Portably packages the frontend (`web/dist` bundle) served cleanly via the FastAPI backend, static subpath hosting, or optional Docker.
 *   **UX Excellence**: Real-time explainable score traces, offline testing mock states, local storage case history, and secure admin controls.
 
 ## Verification
@@ -76,9 +80,10 @@ Recommended checks:
 
 ```bash
 python -m unittest discover -s tests
-python -m compileall src backend
+python -m compileall -f src backend scripts
 cd web && npm run lint && npm run build
 python scripts/mcp_demo.py
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_release.ps1
 ```
 
 ## Sample Scenario

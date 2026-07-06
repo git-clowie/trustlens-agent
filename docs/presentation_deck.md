@@ -4,11 +4,13 @@ Slide-by-slide outline for a concise capstone presentation.
 
 ## Slide 1: Title
 
-Visual: TrustLens banner or dashboard hero.
+Visual: TrustLens banner, dashboard hero, or public demo URL.
 
 Title: `TRUSTLENS`
 
 Subtitle: Multi-agent AI Security Concierge
+
+Footer note: `v1.0.1 | github.com/git-clowie/trustlens-agent | pixek.xyz/trustlens`
 
 Speaker notes:
 
@@ -55,6 +57,7 @@ Points:
 * Gemini Vision OCR for screenshots when configured.
 * OpenRouter Gemma 4 31B analyst enrichment when configured.
 * Deterministic fallback mode for repeatable demos.
+* Static public demo bundle with hidden provider settings and server-side provider keys.
 
 ## Slide 6: Capstone Alignment
 
@@ -67,6 +70,7 @@ Points:
 * Privacy guardrails with local PII redaction.
 * CLI scanner and browser extension companion.
 * Built `web/dist` demo bundle, Provider Settings, runtime static-hosting config, optional Docker helper, and docs.
+* Public-demo release package and subpath-safe static hosting.
 
 ## Slide 7: Close
 
@@ -75,6 +79,7 @@ Visual: GitHub repository, dashboard, and runtime badges.
 Points:
 
 * Run locally: `python backend/run.py`.
+* Public demo: `https://pixek.xyz/trustlens/`.
 * Demo extras: `extension/`, `fixtures/`, `scripts/mcp_demo.py`.
 * Repository: `github.com/git-clowie/trustlens-agent`.
 

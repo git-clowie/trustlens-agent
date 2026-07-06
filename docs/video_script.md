@@ -9,6 +9,8 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 * **Recording Tool:** Loom or OBS Studio.
 * **Audio:** Use a headset or dedicated microphone in a quiet room.
 * **Resolution:** Record in full screen at 1080p.
+* **Primary URL:** `http://127.0.0.1:8000` for live backend recording, or `https://pixek.xyz/trustlens/` for the static public demo.
+* **Admin URL:** add `?settings=1` only when you need to show Provider Settings.
 
 ---
 
@@ -16,7 +18,7 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ### Scene 1: Introduction (0:00 - 0:25)
 
-* **Visual on screen:** Open `http://127.0.0.1:8000`. Show the premium dark dashboard, clean header, unified Omnibox, and runtime badges in the footer.
+* **Visual on screen:** Open `http://127.0.0.1:8000` or the public static demo. Show the premium dark dashboard, clean header, unified Omnibox, and runtime badges in the footer.
 * **Action:** Open the "App Info" modal briefly, then close it.
 * **Voiceover:**
   > "Hello, my name is [Your Name], and this is TrustLens: an AI Security Concierge built on Google's Agent Development Kit and the Model Context Protocol. TrustLens protects users in the critical seconds before they click a malicious link."
@@ -53,7 +55,7 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 ### Scene 5: Extension, MCP & Technical Architecture (2:20 - 2:50)
 
 * **Visual on screen:** Show the `extension/` folder, then run `python scripts/mcp_demo.py` in a terminal.
-* **Action:** Open Provider Settings briefly, then mention the same security tools are available from the web app, Chrome extension, CLI, and MCP server.
+* **Action:** Open Provider Settings with `?settings=1` only if you want to show backend/Gemma state, then mention the same security tools are available from the web app, Chrome extension, CLI, and MCP server.
 * **Voiceover:**
   > "Under the hood, TrustLens uses Google ADK to organize the agent pipeline and exposes its core security tools through an MCP server. The companion extension shows how this can protect selected text before a user clicks, while the MCP demo script proves the tool layer works without relying on a specific host client."
 
@@ -61,6 +63,6 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 
 ### Scene 6: Outro (2:50 - 3:00)
 
-* **Visual on screen:** Return to the dashboard with footer badges showing ADK, MCP, Gemini OCR, and Gemma runtime state.
+* **Visual on screen:** Return to the dashboard with footer badges showing version, ADK, MCP, Gemini OCR, and Gemma runtime state.
 * **Voiceover:**
   > "TrustLens bridges the gap between threat analysis and human action: private by design, explainable by default, and ready for real-world phishing recovery."

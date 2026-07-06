@@ -8,6 +8,14 @@
 
 TrustLens is not a link checker. It is a context-aware recovery agent that translates suspicious-message evidence into human-safe next steps.
 
+## Current Release
+
+* Version: `1.0.1`
+* Public static demo target: `https://pixek.xyz/trustlens/`
+* Repository: `https://github.com/git-clowie/trustlens-agent`
+* Static hosting: `web/dist` is safe to upload at a domain root or inside a subpath.
+* Live AI mode: Gemma and Gemini require a FastAPI backend with provider keys kept server-side.
+
 ## Key Features
 
 1. **Multimodal Vision OCR**: Screenshot messages can be transcribed with Gemini Vision before analysis.
@@ -129,7 +137,7 @@ Gemini and OpenRouter keys must remain on the backend. The static frontend only 
 
 If the static demo cannot reach an API, quick samples still render a marked Browser Demo Fallback report so the public demo remains usable on simple hosting. Connect `API_BASE` to the FastAPI backend to enable the full ADK pipeline, Gemini OCR, and OpenRouter Gemma analyst output.
 
-The web build uses relative asset paths, so the same `web/dist` folder can be uploaded at a domain root or inside a subpath such as `https://pixek.xyz/trustlens/`.
+The web build uses relative asset paths, so the same `web/dist` folder can be uploaded at a domain root or inside a subpath such as `https://pixek.xyz/trustlens/`. Upload the contents of `trustlens-web-dist.zip` into the public `/trustlens/` folder, not an extra nested `dist` directory.
 
 The built dashboard hides Provider Settings by default for a clean public demo. For admin testing, open the app with `?settings=1` or set `SHOW_PROVIDER_SETTINGS: true` in `web/dist/config.js`. The modal can override the API base URL in browser localStorage, show the active Gemma model, and enable Offline Demo Mode for deterministic fallback runs.
 
@@ -150,6 +158,12 @@ The script writes ignored local artifacts to `release/`:
 * `README_RELEASE.txt` - concise deployment notes for the generated packages.
 
 Do not put provider keys in the static bundle. Keep `OPENROUTER_API_KEY`, `OPENROUTER_MODEL=google/gemma-4-31b-it`, and `GEMINI_API_KEY` on the backend host.
+
+See also:
+
+* `CHANGELOG.md`
+* `docs/public_demo.md`
+* `web/README.md`
 
 ## CLI Scanner
 
@@ -262,7 +276,7 @@ Run:
 
 ```bash
 python -m unittest discover -s tests
-python -m compileall src backend scripts
+python -m compileall -f src backend scripts
 cd web && npm run lint && npm run build
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_release.ps1
 ```
@@ -271,5 +285,6 @@ Presentation docs:
 
 * `docs/video_script.md`
 * `docs/presentation_deck.md`
+* `docs/public_demo.md`
 * `docs/epic_roadmap.md`
 * `docs/next_features.md`

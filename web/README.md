@@ -1,32 +1,44 @@
-# React + TypeScript + Vite
+# TrustLens Web Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite frontend for the TrustLens capstone demo.
 
-Currently, two official plugins are available:
+The dashboard is designed for two modes:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* **FastAPI served app:** `python backend/run.py` serves the built `web/dist` bundle and API from `http://127.0.0.1:8000`.
+* **Static public demo:** upload `web/dist` to any static host, including a subfolder such as `https://pixek.xyz/trustlens/`.
 
-## React Compiler
+## Runtime Config
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Vite copies `web/public/config.js` into `web/dist/config.js` during build.
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```js
+window.TRUSTLENS_CONFIG = {
+  API_BASE: "",
+  SHOW_PROVIDER_SETTINGS: false
+};
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Use `API_BASE` only for a public backend URL. Never put `OPENROUTER_API_KEY` or `GEMINI_API_KEY` in the frontend bundle.
+
+Provider Settings are hidden in public builds. Open the app with `?settings=1` for admin testing.
+
+## Commands
+
+```bash
+npm install
+npm run dev
+npm run lint
+npm run build
+```
+
+Production build output:
+
+```txt
+web/dist/
+```
+
+The Vite config uses `base: './'`, so built assets resolve correctly at a domain root or inside a subpath.
+
+## Demo Behavior
+
+If the browser cannot reach the backend API, quick samples still render a clearly marked browser fallback report. Live Gemma analysis and Gemini OCR require the FastAPI backend with provider keys set server-side.

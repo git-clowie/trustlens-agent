@@ -1038,47 +1038,74 @@ export default function App() {
 
       {/* HELP MODAL */}
       {showHelp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(10px)', padding: '1rem' }}>
-          <div className="panel" style={{ maxWidth: '600px', width: '100%', position: 'relative', margin: '0', borderTop: '2px solid var(--accent-primary)', borderBottom: '2px solid var(--accent-secondary)' }}>
-            <button onClick={() => setShowHelp(false)} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--panel-border)', borderRadius: '4px', padding: '4px', cursor: 'pointer', color: 'var(--text-muted)' }}>
+        <div className="modal-backdrop">
+          <div className="panel help-modal">
+            <button className="modal-close" onClick={() => setShowHelp(false)} title="Close app information">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
-            <h3 className="panel-title" style={{ fontSize: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem', color: 'var(--accent-primary)' }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              How to use TrustLens
-            </h3>
-            
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div>
-                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>1. Submit a Suspicious Message</strong>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>Paste any suspicious SMS, email, or chat message into the console. Alternatively, you can upload a screenshot of the message directly and our AI will read the text.</p>
-              </div>
+            <div className="help-header">
+              <span className="help-kicker">TrustLens v{APP_VERSION}</span>
+              <h3 className="panel-title">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                App Info
+              </h3>
+              <p>
+                TrustLens turns suspicious messages into private evidence, a calibrated risk score,
+                and situation-aware next steps before a user clicks, after a click, or during recovery.
+              </p>
+            </div>
 
-              <div>
-                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>2. Specify the Context</strong>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>Let us know if you haven't clicked anything yet (Prevention), if you just clicked the link (Inspection), or if you already shared data (Recovery). We'll tailor the plan accordingly.</p>
+            <div className="help-grid">
+              <div className="help-card">
+                <span className="help-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16"/><path d="M4 12h10"/><path d="M4 17h7"/><path d="M17 14l3 3 3-3"/></svg>
+                </span>
+                <div>
+                  <strong>Submit evidence</strong>
+                  <p>Paste SMS, email, or chat text, or load a safe screenshot fixture for the OCR path.</p>
+                </div>
               </div>
-
-              <div>
-                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>3. Get Actionable Intelligence</strong>
-                <p style={{ color: 'var(--text-secondary)', lineHeight: '1.5' }}>Review the risk score, the exact social engineering techniques used, and follow the step-by-step contextual action plan to secure your data.</p>
+              <div className="help-card">
+                <span className="help-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6"/><path d="M6 20V10"/><path d="M18 20V4"/></svg>
+                </span>
+                <div>
+                  <strong>Choose context</strong>
+                  <p>Prevention, clicked-link inspection, and recovery modes produce different action plans.</p>
+                </div>
+              </div>
+              <div className="help-card">
+                <span className="help-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V5l8-3 8 3v8z"/><path d="M9 12l2 2 4-4"/></svg>
+                </span>
+                <div>
+                  <strong>Review the report</strong>
+                  <p>Use risk, signatures, score trace, Gemma notes, and the compact case packet.</p>
+                </div>
+              </div>
+              <div className="help-card">
+                <span className="help-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M9 12h6"/></svg>
+                </span>
+                <div>
+                  <strong>Demo runtime</strong>
+                  <p>Static hosting works with browser fallback samples; live Gemma/OCR use the FastAPI backend.</p>
+                </div>
               </div>
             </div>
 
-            <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <strong style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>System Architecture</strong>
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}>
-                <span>Gemini Vision OCR</span>
-                <span>OpenRouter Gemma Analyst</span>
-                <span>Google ADK</span>
-                <span>MCP Tool Server</span>
-                <span>Local Guardrails</span>
-              </div>
+            <div className="help-meta">
+              <span>Local PII redaction</span>
+              <span>Zero-click domain inspection</span>
+              <span>Google ADK pipeline</span>
+              <span>MCP tool server</span>
+              <span>OpenRouter Gemma analyst</span>
             </div>
 
-            <div style={{ marginTop: '2.5rem', textAlign: 'center', fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Built by </span>
-              <a href="https://pixek.xyz" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-secondary)', textDecoration: 'none', fontWeight: 700, textShadow: '0 0 10px rgba(139, 92, 246, 0.5)' }}>pixek.xyz</a>
+            <div className="help-footer">
+              <a href="https://pixek.xyz/trustlens/" target="_blank" rel="noreferrer">Public demo</a>
+              <a href="https://github.com/git-clowie/trustlens-agent" target="_blank" rel="noreferrer">GitHub repo</a>
+              <span>Built by pixek.xyz</span>
             </div>
           </div>
         </div>

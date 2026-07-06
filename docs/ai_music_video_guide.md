@@ -1,82 +1,82 @@
-# TrustLens AI Music Video Production Plan (UI Screenshot Edition)
+# TrustLens AI Music Video Production Plan
 
-This guide shows you how to capture **real screenshots of TrustLens** and animate them using AI Video Generators (**Runway Gen-3 / Luma Dream Machine / Kling**) to create a premium, high-tech product trailer set to a **Suno AI** track.
+This optional guide shows how to capture real TrustLens UI screenshots and animate them with AI video tools such as Runway, Luma, or Kling for a short product-trailer style capstone asset.
 
----
+## Part 1: Suno AI Lyrics & Style Config
 
-## 🎵 Part 1: Suno AI Lyrics & Style Config
-*   **Prompt for Suno Style:** `Obsidian dark cyberpunk synthwave, driving electronic beat, high-energy vocals, male/female duet, 115 BPM`
-*   **Suno Lyrics (Copy & Paste):**
-    ```text
-    [Verse 1]
-    You get a message in the middle of the night
-    A package warning or a bank account fight
-    "Click the link to verify your code right now"
-    Before you tap the screen, you gotta wonder how.
-    But hold up! Don't let the panic take control
-    Anonymize the numbers, keep your privacy whole.
+Prompt for Suno style:
 
-    [Chorus]
-    This is TrustLens (Lens)
-    Scanning every threat on the screen
-    Through the multi-agent ADK pipeline, so clean
-    Yeah, TrustLens (Lens)
-    Zero-trust checking the zone
-    Off-line investigation on your mobile phone
-    Don't click, inspect, recover the name
-    TrustLens is changing the game!
+```txt
+Obsidian dark cyberpunk synthwave, driving electronic beat, high-energy vocals, male/female duet, 115 BPM
+```
 
-    [Verse 2]
-    Gemini Vision OCR reads the screenshot view
-    Redacting all the cards, protecting me and you
-    Domain typosquats (netfl1x) checked entirely offline
-    MCP server routing tools, feeling so divine.
-    No live requests, no trackers, zero-threat line
-    Safe recommendations, exactly in time.
+Lyrics draft:
 
-    [Chorus]
-    This is TrustLens (Lens)
-    Scanning every threat on the screen
-    Through the multi-agent ADK pipeline, so clean
-    Yeah, TrustLens (Lens)
-    Zero-trust checking the zone
-    Off-line investigation on your mobile phone
-    Don't click, inspect, recover the name
-    TrustLens is changing the game!
+```text
+[Verse 1]
+You get a message in the middle of the night
+A package warning or a bank account fight
+"Click the link to verify your code right now"
+Before you tap the screen, you gotta wonder how.
+But hold up! Don't let the panic take control
+Anonymize the numbers, keep your privacy whole.
 
-    [Outro]
-    (Built by pixek.xyz)
-    Secure before you click...
-    TrustLens.
-    ```
+[Chorus]
+This is TrustLens
+Scanning every threat on the screen
+Through the multi-agent ADK pipeline, so clean
+TrustLens
+Zero-trust checking the zone
+Offline investigation on your mobile phone
+Don't click, inspect, recover the name
+TrustLens is changing the game.
 
----
+[Verse 2]
+Gemini Vision OCR reads the screenshot view
+Redacting all the cards, protecting me and you
+Domain typosquats checked entirely offline
+MCP server routing tools right on time
+No live browsing, no trackers, zero-threat line
+Safe recommendations, exactly in time.
 
-## 📸 Part 2: Screenshot Checklist & AI Video Prompts
-Open `http://127.0.0.1:8000` in your browser and capture these **three** screenshots. Feed them into Runway or Luma as "Image Prompt" inputs to generate dynamic animations.
+[Outro]
+Built by pixek.xyz
+Secure before you click
+TrustLens
+```
 
-### Scene 1: The Premium Landing Page (Verse 1)
-*   **How to capture:** Take a screenshot of the main dashboard in its idle state, featuring the Logo, Omnibox, and the "Not Clicked / Clicked Link" segmented buttons. Save it as `screenshot_landing.png`.
-*   **AI Video Generator Prompt (Image-to-Video):**
-    > "Using this screenshot as the initial frame: A slow camera pan and zoom into the central terminal box. Overlay glowing cyan digital dust particles and subtle futuristic holographic grid lines. High-tech, cinematic, smooth camera motion."
+## Part 2: Screenshot Checklist & AI Video Prompts
 
-### Scene 2: The Agent Timeline Animation (Chorus / Verse 2)
-*   **How to capture:** Click the **DHL SMS** button. While the spinner is active and the timeline items (Vision OCR, PII Redaction) are running or completing, take a screenshot of the active trace list. Save it as `screenshot_timeline.png`.
-*   **AI Video Generator Prompt (Image-to-Video):**
-    > "Using this screenshot as the initial frame: Make the green checkmarks pulse with light, and the text lines scroll upwards slightly. Add subtle digital glitch effects on the borders, resembling an active server console tracing files in a database."
+Open `http://127.0.0.1:8000` for the live backend demo or `https://pixek.xyz/trustlens/` for the static public demo.
 
-### Scene 3: The Risk Score & Action Plan (Chorus 2 / Outro)
-*   **How to capture:** Let the analysis finish and scroll down to capture the calibrated risk score gauge and the Contextual Action Plan. Save it as `screenshot_report.png`.
-*   **AI Video Generator Prompt (Image-to-Video):**
-    > "Using this screenshot as the initial frame: Make the circular threat gauge glow and rotate slowly. Apply a clean 3D depth effect so the text blocks seem to float slightly in front of the dark mesh background. High-tech presentation style."
+### Scene 1: Dashboard Idle State
 
----
+Capture the main dashboard with the logo, message box, status buttons, and compact sample strip.
 
-## 🎞️ Part 3: Easy Video Editing (Putting It Together)
-1. **Generate the Song:** Head to Suno AI, input the lyrics, and generate a Cyberpunk Synthwave track.
-2. **Generate the Clips:** Upload your 3 screenshots into Runway or Luma, paste the respective prompts above, and export the resulting 4-5 second video files.
-3. **Assemble in CapCut/Canva:**
-   - Drop the Suno audio track.
-   - Place the animated screenshot clips matching the lyrics.
-   - Add automated captions/lyrics overlay in a cyan cyberpunk color.
-   - Export your final Capstone video!
+Image-to-video prompt:
+
+> Using this screenshot as the initial frame: slow camera pan into the central analysis box, subtle cyan interface glow, clean high-tech product motion, crisp UI readability.
+
+### Scene 2: Agent Timeline
+
+Click `DHL SMS` and capture the investigation timeline while checks are running.
+
+Image-to-video prompt:
+
+> Using this screenshot as the initial frame: make active checks progress with subtle light pulses, add restrained terminal-style motion, preserve all UI text clarity.
+
+### Scene 3: Security Review
+
+Capture the risk score, signatures, next move, and contextual action plan.
+
+Image-to-video prompt:
+
+> Using this screenshot as the initial frame: give the circular risk score a slow premium glow, add slight depth to the report panels, keep the dark product UI sharp and professional.
+
+## Part 3: Editing
+
+1. Generate the music track.
+2. Generate three short image-to-video clips from the screenshots.
+3. Assemble in CapCut, Canva, Premiere, or DaVinci Resolve.
+4. Add short captions for the core message: private evidence, explainable score, safe next step.
+5. Export the final capstone trailer.

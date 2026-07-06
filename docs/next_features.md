@@ -1,6 +1,6 @@
 # TrustLens Next Features
 
-This is the focused backlog after the Gemma/OpenRouter demo, Evidence Analytics, Score Trace, Local Case History, and compact Case Packet work.
+This is the focused backlog after the Gemma/OpenRouter demo, Evidence Analytics, Score Trace, Local Case History, compact Case Packet, public static demo, and `v1.0.1` repo polish.
 
 ## 1. Chrome Extension Companion *(implemented)*
 
@@ -78,3 +78,24 @@ Scope:
 * Show a clear "API disconnected" state when static hosting has no backend.
 * Keep OpenRouter and Gemini keys only on a server-side endpoint.
 * Implemented through `web/public/config.js`, copied to `web/dist/config.js` during build.
+
+## 8. Public Repo Polish *(implemented)*
+
+Goal: make the GitHub repo judge-ready before the presentation pass.
+
+Scope:
+
+* Replace the default Vite frontend README.
+* Add `CHANGELOG.md` and `docs/public_demo.md`.
+* Document subpath-safe static hosting and release package usage.
+* Refresh the App Info modal with version, workflow, runtime, and repo/demo links.
+
+## 9. Presentation Package *(next)*
+
+Goal: prepare the final capstone submission story.
+
+Scope:
+
+* Turn `docs/presentation_deck.md` into a final slide deck.
+* Record the product demo from `docs/video_script.md`.
+* Capture MCP terminal proof with `python scripts/mcp_demo.py`.

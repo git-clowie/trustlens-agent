@@ -43,6 +43,7 @@ $TopLevelFiles = @(
   ".dockerignore",
   ".env.example",
   ".gitignore",
+  "CHANGELOG.md",
   "Dockerfile",
   "README.md",
   "pyproject.toml",
@@ -112,6 +113,8 @@ Get-ChildItem -LiteralPath $FullRoot -Recurse -File -Force |
 
 @"
 TrustLens release packages
+Version: 1.0.1
+Public demo target: https://pixek.xyz/trustlens/
 
 trustlens-web-dist.zip
 - Upload the archive contents to static hosting when the API is served separately or same-origin.
