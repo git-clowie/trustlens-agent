@@ -5,12 +5,16 @@ declare global {
   interface Window {
     TRUSTLENS_CONFIG?: {
       API_BASE?: string;
+      SHOW_PROVIDER_SETTINGS?: boolean;
     };
   }
 }
 
 const configuredApiBase = window.TRUSTLENS_CONFIG?.API_BASE || import.meta.env.VITE_API_BASE || '';
+const urlParams = new URLSearchParams(window.location.search);
 const DEFAULT_API_BASE = normalizeApiBase(configuredApiBase || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''));
+const SHOW_PROVIDER_SETTINGS = window.TRUSTLENS_CONFIG?.SHOW_PROVIDER_SETTINGS ?? import.meta.env.DEV;
+const PROVIDER_SETTINGS_ENABLED = SHOW_PROVIDER_SETTINGS || urlParams.has('settings');
 const HISTORY_KEY = 'trustlens_case_history_v1';
 const API_BASE_STORAGE_KEY = 'trustlens_api_base_v1';
 const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
@@ -493,10 +497,12 @@ export default function App() {
               Offline Demo
             </span>
           )}
-          <button className="badge" onClick={() => setShowProviderSettings(true)} style={{ cursor: 'pointer', background: 'var(--panel-bg)', color: 'var(--text-secondary)' }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06A2 2 0 1 1 7.03 3.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.4.6.8 1 1 .34.19.72.3 1.1.3H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.7z"/></svg>
-            Provider
-          </button>
+          {PROVIDER_SETTINGS_ENABLED && (
+            <button className="badge" onClick={() => setShowProviderSettings(true)} style={{ cursor: 'pointer', background: 'var(--panel-bg)', color: 'var(--text-secondary)' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.6 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 8.6a1.7 1.7 0 0 0-.34-1.88l-.06-.06A2 2 0 1 1 7.03 3.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15.4 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.2.4.6.8 1 1 .34.19.72.3 1.1.3H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51.7z"/></svg>
+              Provider
+            </button>
+          )}
           <button className="badge" onClick={() => setShowHelp(true)} style={{ cursor: 'pointer', background: 'var(--panel-bg)', color: 'var(--accent-primary)' }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             App Info

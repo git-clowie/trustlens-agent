@@ -111,7 +111,8 @@ The Vite dev server connects to the FastAPI backend on port 8000.
 
 ```js
 window.TRUSTLENS_CONFIG = {
-  API_BASE: ""
+  API_BASE: "",
+  SHOW_PROVIDER_SETTINGS: false
 };
 ```
 
@@ -119,13 +120,14 @@ For simple static hosting with a separate backend, edit the built `web/dist/conf
 
 ```js
 window.TRUSTLENS_CONFIG = {
-  API_BASE: "https://your-trustlens-api.example.com"
+  API_BASE: "https://your-trustlens-api.example.com",
+  SHOW_PROVIDER_SETTINGS: false
 };
 ```
 
 Gemini and OpenRouter keys must remain on the backend. The static frontend only stores the public API base URL.
 
-The built dashboard also includes a Provider Settings modal. It can override the API base URL in browser localStorage, show the active Gemma model, and enable Offline Demo Mode for deterministic fallback runs.
+The built dashboard hides Provider Settings by default for a clean public demo. For admin testing, open the app with `?settings=1` or set `SHOW_PROVIDER_SETTINGS: true` in `web/dist/config.js`. The modal can override the API base URL in browser localStorage, show the active Gemma model, and enable Offline Demo Mode for deterministic fallback runs.
 
 ## CLI Scanner
 

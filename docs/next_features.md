@@ -57,6 +57,7 @@ Scope:
 * Show live/fallback status.
 * Add a "run offline demo mode" toggle that routes model/OCR enrichment to deterministic local fallback.
 * Add runtime API base override for static demo hosting.
+* Hide the provider control in public builds unless `?settings=1` or `SHOW_PROVIDER_SETTINGS: true` is used.
 
 ## 6. Judge Demo + Print Packet *(implemented)*
 
