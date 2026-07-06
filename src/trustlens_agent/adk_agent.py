@@ -302,10 +302,15 @@ class TrustLensCoordinatorAgent:
         for field in [summary['verdict'], report_draft]:
             # A simple sanity check to ensure no raw email or card got leaked
             if "@" in field and not "[REDACTED_EMAIL]" in field:
-                # Basic check for email leak
-                pass
-        trace[-1]['status'] = 'completed'
-        trace[-1]['detail'] = 'Guardrail check PASSED. Report is safe to present to the user.'
+                has_pii_leak = True
+                
+        if has_pii_leak:
+            trace[-1]['status'] = 'error'
+            trace[-1]['detail'] = 'Guardrail check FAILED: Raw PII detected in output. Halting.'
+            report_draft = "ERROR: Output blocked by privacy guardrails due to potential PII leak."
+        else:
+            trace[-1]['status'] = 'completed'
+            trace[-1]['detail'] = 'Guardrail check PASSED. Report is safe to present to the user.'
         
         return {
             'redacted_text': redacted_text,

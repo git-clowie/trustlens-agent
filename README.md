@@ -129,6 +129,24 @@ Gemini and OpenRouter keys must remain on the backend. The static frontend only 
 
 The built dashboard hides Provider Settings by default for a clean public demo. For admin testing, open the app with `?settings=1` or set `SHOW_PROVIDER_SETTINGS: true` in `web/dist/config.js`. The modal can override the API base URL in browser localStorage, show the active Gemma model, and enable Offline Demo Mode for deterministic fallback runs.
 
+## Release Packages
+
+Build the frontend first, then create ready-to-upload bundles:
+
+```bash
+cd web && npm run build
+cd ..
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_release.ps1
+```
+
+The script writes ignored local artifacts to `release/`:
+
+* `trustlens-web-dist.zip` - static hosting bundle with the public dashboard, hidden provider controls, fixtures, and `config.js`.
+* `trustlens-full-app.zip` - full source handoff with backend, CLI, MCP server, extension, docs, tests, Docker helper, and the built `web/dist`.
+* `README_RELEASE.txt` - concise deployment notes for the generated packages.
+
+Do not put provider keys in the static bundle. Keep `OPENROUTER_API_KEY`, `OPENROUTER_MODEL=google/gemma-4-31b-it`, and `GEMINI_API_KEY` on the backend host.
+
 ## CLI Scanner
 
 Run a sample scan:
@@ -240,8 +258,9 @@ Run:
 
 ```bash
 python -m unittest discover -s tests
-python -m compileall src backend
+python -m compileall src backend scripts
 cd web && npm run lint && npm run build
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_release.ps1
 ```
 
 Presentation docs:

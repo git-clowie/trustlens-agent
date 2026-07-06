@@ -17,6 +17,9 @@ web/node_modules/
 web/dist-ssr/
 .eslintcache
 
+# Local release bundles
+release/
+
 # IDE specific settings
 .vscode/
 .idea/
