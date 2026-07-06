@@ -435,18 +435,22 @@ export default function App() {
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!report) return;
-    navigator.clipboard.writeText(report.report_draft);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
+    const copied = await copyTextToClipboard(report.report_draft);
+    if (copied) {
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    }
   };
 
-  const handleCopySummary = () => {
+  const handleCopySummary = async () => {
     if (!report) return;
-    navigator.clipboard.writeText(buildShareSummary(report, reportSituation));
-    setShareSuccess(true);
-    setTimeout(() => setShareSuccess(false), 2000);
+    const copied = await copyTextToClipboard(buildShareSummary(report, reportSituation));
+    if (copied) {
+      setShareSuccess(true);
+      setTimeout(() => setShareSuccess(false), 2000);
+    }
   };
 
   const handleExportJson = () => {
@@ -1117,6 +1121,28 @@ function loadStoredApiBase() {
 function loadStoredBoolean(key: string) {
   try {
     return window.localStorage.getItem(key) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+async function copyTextToClipboard(value: string) {
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  if (copied) return true;
+
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
   } catch {
     return false;
   }
