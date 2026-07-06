@@ -76,7 +76,7 @@ http://127.0.0.1:8766/trustlens/
 Expected:
 
 * The TrustLens home screen renders.
-* Runtime footer shows `v1.0.4`.
+* Runtime footer shows `v1.0.5`.
 * Quick samples load and produce a browser fallback report when no API is connected.
 * Browser developer console has no current bundle errors.
 

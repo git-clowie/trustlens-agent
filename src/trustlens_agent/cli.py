@@ -17,7 +17,7 @@ SAMPLES = {
     'lottery': {
         'source': 'Email',
         'situation': 'before_click',
-        'text': 'Congratulations! Your email john.doe@gmail.com won a $50,000 Google Rewards prize. Reply with your phone +1 202 555 0148 and SSN 123-45-6789 to claim.'
+        'text': 'Rewards Support: your email john.doe@gmail.com was selected for a $50,000 prize. Confirm your phone +1 202 555 0148 and tax ID 123-45-6789 at https://global-rewards-bonus.com/secure-claim.'
     },
     'romance': {
         'source': 'Chat',

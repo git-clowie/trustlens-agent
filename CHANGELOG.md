@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5 - 2026-07-06
+
+Demo screenshot polish and deploy fix.
+
+* Fixed bundled screenshot fixture previews when deployed from relative subpaths.
+* Refreshed the prize and QR screenshot fixtures with clearer international synthetic examples.
+
 ## 1.0.4 - 2026-07-06
 
 Final sample and processing polish.

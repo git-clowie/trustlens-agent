@@ -10,7 +10,7 @@ Title: `TRUSTLENS`
 
 Subtitle: Multi-agent AI Security Concierge
 
-Footer note: `v1.0.4 | github.com/git-clowie/trustlens-agent | pixek.xyz/trustlens`
+Footer note: `v1.0.5 | github.com/git-clowie/trustlens-agent | pixek.xyz/trustlens`
 
 Speaker notes:
 

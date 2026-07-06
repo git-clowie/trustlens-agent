@@ -23,7 +23,7 @@ const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
 const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
 const RUNTIME_OPENROUTER_MODEL = window.TRUSTLENS_CONFIG?.OPENROUTER_MODEL || import.meta.env.VITE_OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL;
 const PUBLIC_OPENROUTER_DEMO_KEY = window.TRUSTLENS_CONFIG?.PUBLIC_OPENROUTER_DEMO_KEY || import.meta.env.VITE_PUBLIC_OPENROUTER_DEMO_KEY || '';
-const APP_VERSION = '1.0.4';
+const APP_VERSION = '1.0.5';
 const TRACE_STEP_DELAY_MS = 320;
 const TRACE_FINAL_DELAY_MS = 180;
 const PUBLIC_ASSET_BASE = import.meta.env.BASE_URL || './';
@@ -47,7 +47,7 @@ const SAMPLES = {
   lottery: {
     source: 'Email',
     situation: 'before_click',
-    text: 'Congratulations! Your email john.doe@gmail.com won a $50,000 Google Rewards prize. Reply with your phone +1 202 555 0148 and SSN 123-45-6789 to claim.'
+    text: 'Rewards Support: your email john.doe@gmail.com was selected for a $50,000 prize. Confirm your phone +1 202 555 0148 and tax ID 123-45-6789 at https://global-rewards-bonus.com/secure-claim.'
   },
   romance: {
     source: 'Chat',
@@ -1283,7 +1283,14 @@ async function copyTextToClipboard(value: string) {
 }
 
 function getImagePreviewSrc(value: string, mimeType?: string | null) {
-  if (value.startsWith('data:') || value.startsWith('/') || value.startsWith('http')) return value;
+  if (
+    value.startsWith('data:') ||
+    value.startsWith('blob:') ||
+    value.startsWith('/') ||
+    value.startsWith('./') ||
+    value.startsWith('../') ||
+    value.startsWith('http')
+  ) return value;
   return `data:${mimeType || 'image/png'};base64,${value}`;
 }
 
@@ -1558,7 +1565,7 @@ function getClientFixtureText(imageMarker?: string | null) {
     return 'PayPal Security: Your account is temporarily limited. Confirm your identity at https://paypal-account-review.net/login within 30 minutes.';
   }
   if (marker.includes('LOTTERY')) {
-    return 'Google Rewards: Congratulations, you won a $50,000 prize. Submit your phone number and SSN at https://google-rewards-claim.com/secure.';
+    return 'Rewards Support: Congratulations, you won a $50,000 prize. Submit your phone number and tax ID at https://global-rewards-bonus.com/secure-claim.';
   }
   if (marker.includes('QR')) {
     return 'Microsoft 365: Scan this QR code to keep mailbox access active. Confirm password at https://microsoft365-login-review.com.';

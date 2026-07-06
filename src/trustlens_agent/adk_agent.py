@@ -36,16 +36,16 @@ OCR_FIXTURE_TEXTS = {
         "Pay $2.99 at https://fedex-delivery-fee.info to release shipment."
     ),
     "TRUSTLENS_FIXTURE_LOTTERY": (
-        "Congratulations! You won a $5,000 Google Rewards voucher. Confirm your "
-        "phone, email, and SSN at https://google-rewards-claim.xyz/claim."
+        "Rewards Support: Congratulations, you won a $50,000 prize. Confirm your "
+        "phone, email, and tax ID at https://global-rewards-bonus.com/secure-claim."
     ),
     "TRUSTLENS_FIXTURE_ROMANCE": (
         "Iubire, am nevoie urgent de 300 EUR pentru viza. Te rog trimite banii astazi "
         "si nu spune nimanui."
     ),
     "TRUSTLENS_FIXTURE_QR": (
-        "Scan this QR code to reactivate your Microsoft account in 10 minutes: "
-        "https://microsoft-login-secure.top"
+        "Scan this QR code to keep Microsoft 365 mailbox access active: "
+        "https://microsoft365-login-review.com"
     ),
 }
 

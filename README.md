@@ -10,7 +10,7 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 
 ## Current Release
 
-* Version: `1.0.4`
+* Version: `1.0.5`
 * Public static demo target: `https://pixek.xyz/trustlens/`
 * Repository: `https://github.com/git-clowie/trustlens-agent`
 * Static hosting: `web/dist` is safe to upload at a domain root or inside a subpath.

@@ -17,7 +17,7 @@ class TrustLensOcrFixtureTests(unittest.TestCase):
             qr_text = ocr_screenshot("TRUSTLENS_FIXTURE_QR_SCREENSHOT", "image/svg+xml")
 
         self.assertIn("paypal-account-review.net", bank_text)
-        self.assertIn("microsoft-login-secure.top", qr_text)
+        self.assertIn("microsoft365-login-review.com", qr_text)
 
 
 if __name__ == "__main__":
