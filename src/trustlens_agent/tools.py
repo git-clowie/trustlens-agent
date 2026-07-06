@@ -5,15 +5,16 @@ from urllib.parse import urlparse
 EMAIL_REGEX = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
 PHONE_REGEX = r'(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
 CREDIT_CARD_REGEX = r'\b(?:\d[ -]*?){13,16}\b'
-CNP_REGEX = r'\b[1-8]\d{12}\b' # Romanian CNP (SSN equivalent)
+NATIONAL_ID_REGEX = r'\b[1-8]\d{12}\b' # 13-digit national ID-like value
 SSN_REGEX = r'\b\d{3}-\d{2}-\d{4}\b' # US SSN
 
-# Brands commonly targeted by scammers
+# Brands commonly targeted by scammers across international campaigns
 COMMON_BRANDS = [
-    'dhl', 'fedex', 'ups', 'posta', 'posta romana', 'fan courier', 'sameday',
-    'paypal', 'revolut', 'netflix', 'amazon', 'bt', 'banca transilvania',
-    'brd', 'bcr', 'ing', 'raiffeisen', 'anaf', 'google', 'microsoft',
-    'apple', 'facebook', 'instagram', 'whatsapp', 'posta-romana'
+    'dhl', 'fedex', 'ups', 'usps', 'royal mail',
+    'paypal', 'revolut', 'netflix', 'amazon', 'ebay', 'coinbase',
+    'bank of america', 'chase', 'wells fargo', 'hsbc', 'ing', 'raiffeisen',
+    'mastercard', 'google', 'microsoft', 'apple',
+    'facebook', 'instagram', 'whatsapp', 'telegram'
 ]
 
 # Suspicious top-level domains (TLDs)
@@ -35,7 +36,7 @@ def _domain_mentions_brand(domain: str, brand: str) -> bool:
     if not brand_tokens:
         return False
 
-    # Short brands such as ING, BT, BCR, BRD, UPS must be exact tokens.
+    # Short brands such as ING, UPS, DHL, USPS must be exact tokens.
     # This avoids false positives such as "handling" -> "ing".
     if len(brand_tokens) == 1:
         return brand_tokens[0] in tokens
@@ -56,8 +57,8 @@ def redact_pii(text: str) -> str:
     # Redact US SSN
     redacted = re.sub(SSN_REGEX, '[REDACTED_SSN]', redacted)
 
-    # Redact Romanian CNP before phone/card patterns can consume the digits
-    redacted = re.sub(CNP_REGEX, '[REDACTED_SSN]', redacted)
+    # Redact long national ID-like values before phone/card patterns can consume the digits
+    redacted = re.sub(NATIONAL_ID_REGEX, '[REDACTED_SSN]', redacted)
 
     # Redact credit cards before phone numbers to avoid partial phone-style matches
     redacted = re.sub(CREDIT_CARD_REGEX, '[REDACTED_CREDIT_CARD]', redacted)
@@ -202,7 +203,7 @@ def detect_social_engineering(text: str) -> list:
     # 2. Impersonation of brands in text
     matched_brands = []
     for brand in COMMON_BRANDS:
-        # Match word boundaries or custom formats like Posta-Romana
+        # Match word boundaries and hyphenated brand formats.
         pattern = r'\b' + re.escape(brand) + r'\b'
         if re.search(pattern, text_lower):
             matched_brands.append(brand)
@@ -214,9 +215,11 @@ def detect_social_engineering(text: str) -> list:
         
     # 3. Financial requests
     financial_keywords = [
-        'plateste', 'plata', 'taxa', 'fee', 'restituire', 'customs', 'vama',
-        'outstanding', 'refund', 'card', 'cont', 'bank', 'investeste', 'castig',
-        'premiu', 'prize', 'colet', 'pachet', 'delivered', 'livrare'
+        'pay', 'payment', 'fee', 'tax', 'invoice', 'customs', 'delivery fee',
+        'outstanding', 'refund', 'card', 'account', 'bank', 'transfer',
+        'wire', 'gift card', 'crypto', 'won', 'winner', 'reward', 'voucher',
+        'claim', 'prize', 'package', 'parcel', 'shipment', 'delivered', 'delivery',
+        'plateste', 'plata', 'taxa', 'restituire', 'vama', 'cont', 'castig', 'premiu'
     ]
     matched_financial = [kw for kw in financial_keywords if kw in text_lower]
     if matched_financial:
@@ -228,13 +231,27 @@ def detect_social_engineering(text: str) -> list:
     # 4. Credential Harvesting / Action redirection
     harvesting_keywords = [
         'verificare', 'confirma', 'conecteaza-te', 'autentifica', 'update', 'login',
-        'verify', 'confirm', 'update credentials', 'secure account', '2fa', 'cod'
+        'verify', 'verification', 'confirm', 'update credentials', 'secure account',
+        'reactivate', 'sign in', 'signin', 'password', '2fa', 'code', 'otp',
+        'phone', 'email', 'ssn', 'social security', 'national id', 'identity'
     ]
     matched_harvesting = [kw for kw in harvesting_keywords if kw in text_lower]
     if matched_harvesting:
         indicators.append({
             'category': 'Data Collection Prompt',
             'detail': f"Account verification request: {', '.join(matched_harvesting[:3])}"
+        })
+
+    # 5. Relationship / trust exploitation
+    relationship_keywords = [
+        'love you', 'dear', 'visa fee', 'send money', 'do not tell', "don't tell",
+        'keep this secret', 'emergency help', 'need money', 'cannot wait'
+    ]
+    matched_relationship = [kw for kw in relationship_keywords if kw in text_lower]
+    if matched_relationship:
+        indicators.append({
+            'category': 'Relationship Exploitation',
+            'detail': f"Trust-building or isolation language detected: {', '.join(matched_relationship[:3])}"
         })
         
     return indicators
@@ -248,18 +265,21 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
     confidence = 55
     score_trace = []
     
-    # Social engineering indicators add up
+    # Social engineering indicators add calibrated weight. These are not all
+    # equivalent; credential prompts and relationship exploitation deserve more
+    # weight than a brand mention by itself.
     for indicator in text_indicators:
         category = indicator.get('category', 'Text Signal')
+        impact = _indicator_impact(category)
         score_trace.append({
             'label': category,
-            'impact': 20,
+            'impact': impact,
             'source': 'message_text',
             'severity': _indicator_severity(category),
             'evidence': indicator.get('detail', 'Detected social engineering pattern.'),
-            'calculation': '+20 for a matched social engineering signal.'
+            'calculation': f"+{impact} for this matched social engineering signal."
         })
-    total_score += len(text_indicators) * 20
+    total_score += sum(_indicator_impact(indicator.get('category', 'Text Signal')) for indicator in text_indicators)
     
     # Domain inspection overrides or adds to score
     max_domain_score = 0
@@ -291,16 +311,18 @@ def score_risk(domain_reports: list, text_indicators: list) -> dict:
     if max_domain_score > 0:
         before_escalation = max(total_score, max_domain_score)
         total_score = max(total_score, max_domain_score)
-        # If there are both suspicious text AND a malicious domain, push to max
+        # If there are both suspicious text and a risky domain, add a calibrated
+        # synthesis boost instead of flattening every strong demo to 100.
         if len(text_indicators) >= 2:
-            total_score = max(total_score + 15, 95)
+            combo_boost = _combo_boost(max_domain_score, len(text_indicators))
+            total_score = min(total_score + combo_boost, _combo_cap(max_domain_score, len(text_indicators)))
             score_trace.append({
                 'label': 'Domain plus persuasion combo',
                 'impact': total_score - before_escalation,
                 'source': 'risk_synthesis',
                 'severity': _score_severity(total_score),
                 'evidence': 'A risky destination appears together with multiple persuasion hooks.',
-                'calculation': 'Raises combined link-and-pressure cases to at least 95/100.'
+                'calculation': 'Adds a calibrated synthesis boost for link-and-pressure combinations.'
             })
     else:
         # If no links, but severe social engineering pattern (e.g. romance scam, text-only bank fraud)
@@ -354,12 +376,42 @@ def _score_severity(score: int) -> str:
         return 'medium'
     return 'low'
 
+def _indicator_impact(category: str) -> int:
+    weights = {
+        'Urgency & Pressure': 14,
+        'Brand Impersonation': 12,
+        'Financial Request': 14,
+        'Data Collection Prompt': 16,
+        'Relationship Exploitation': 22,
+    }
+    return weights.get(category, 10)
+
 def _indicator_severity(category: str) -> str:
-    if category in ('Financial Request', 'Data Collection Prompt'):
+    if category in ('Financial Request', 'Data Collection Prompt', 'Relationship Exploitation'):
         return 'high'
     if category in ('Urgency & Pressure', 'Brand Impersonation'):
         return 'medium'
     return 'low'
+
+def _combo_boost(max_domain_score: int, indicator_count: int) -> int:
+    if max_domain_score >= 90:
+        return 4 + min(indicator_count, 3)
+    if max_domain_score >= 70:
+        return 6 + min(indicator_count * 2, 8)
+    if max_domain_score >= 35:
+        return 10 + min(indicator_count * 3, 18)
+    return min(indicator_count * 2, 8)
+
+def _combo_cap(max_domain_score: int, indicator_count: int) -> int:
+    if max_domain_score >= 95 and indicator_count >= 4:
+        return 100
+    if max_domain_score >= 90:
+        return 98
+    if max_domain_score >= 70:
+        return 96
+    if max_domain_score >= 35:
+        return 88
+    return 85
 
 def generate_safe_steps(message_type: str, situation: str) -> list:
     """

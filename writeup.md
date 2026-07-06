@@ -21,7 +21,7 @@ TrustLens supports three user states:
 TrustLens is built as a code-first agentic pipeline:
 
 1. **TrustLensCoordinatorAgent:** orchestrates the investigation flow.
-2. **PII Redaction:** masks emails, phones, cards, SSNs, and Romanian CNP-style IDs.
+2. **PII Redaction:** masks emails, phones, cards, SSNs, and national ID-like values.
 3. **Link Extraction:** parses URLs without opening them.
 4. **Domain Inspection:** detects suspicious TLDs, brand impersonation, typosquatting, and risky layouts.
 5. **Social Engineering Detection:** finds urgency, money pressure, brand claims, and credential prompts.

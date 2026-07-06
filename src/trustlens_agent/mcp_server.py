@@ -13,7 +13,7 @@ from trustlens_agent.tools import (
 TOOL_SCHEMAS = [
     {
         "name": "redact_pii",
-        "description": "Redacts PII (emails, phones, cards, CNP, SSN) from message text.",
+        "description": "Redacts PII (emails, phones, cards, SSNs, national ID-like values) from message text.",
         "inputSchema": {
             "type": "object",
             "properties": {"text": {"type": "string"}},
@@ -122,7 +122,7 @@ try:
     @mcp_app.tool()
     def clean_text_pii(text: str) -> str:
         """
-        Redacts personal identifiable information (emails, phones, credit cards, CNP, SSN) from text.
+        Redacts personal identifiable information (emails, phones, credit cards, SSNs, national ID-like values) from text.
         """
         return redact_pii(text)
         

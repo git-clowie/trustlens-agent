@@ -102,6 +102,14 @@ foreach ($dir in @("dist", "public", "src")) {
   }
 }
 
+Get-ChildItem -LiteralPath $FullRoot -Recurse -Directory -Force |
+  Where-Object { $_.Name -in @("__pycache__", ".pytest_cache") } |
+  Remove-Item -Recurse -Force
+
+Get-ChildItem -LiteralPath $FullRoot -Recurse -File -Force |
+  Where-Object { $_.Extension -in @(".pyc", ".pyo") } |
+  Remove-Item -Force
+
 @"
 TrustLens release packages
 

@@ -16,7 +16,7 @@ TrustLens is not a link checker. It is a context-aware recovery agent that trans
 4. **Evidence Analytics + Score Trace**: Shows link count, maximum domain risk, social hooks, AI analyst status, confidence, trace depth, and structured score contributions.
 5. **Local Case History**: Stores anonymized investigations in browser localStorage so users can reopen recent cases.
 6. **Compact Case Packet**: Shows a balanced reporting snapshot with risk, context, primary evidence, top score contributors, copy summary, JSON export, and print/PDF output.
-7. **Privacy-First PII Redaction**: Masks emails, phone numbers, cards, CNPs, and SSNs before external model enrichment.
+7. **Privacy-First PII Redaction**: Masks emails, phone numbers, cards, SSNs, and national ID-like values before external model enrichment.
 8. **Offline Domain Inspection**: Detects typosquatting, brand impersonation, suspicious TLDs, hyphen-heavy domains, and digit-heavy domains without opening links.
 9. **Situation-Aware Safety Planner**: Adjusts next steps for prevention, clicked-link inspection, or compromised-data recovery.
 10. **Chrome Extension Companion**: Adds a local pre-click browser workflow for selected suspicious text.
@@ -171,7 +171,7 @@ Available samples:
 Custom scan:
 
 ```bash
-trustlens scan --text "URGENT: Click here to verify your account now http://secure-bt-portal.xyz" --situation clicked_only
+trustlens scan --text "URGENT: verify your PayPal account now at http://paypal-security-center.live" --situation clicked_only
 ```
 
 ## MCP Server

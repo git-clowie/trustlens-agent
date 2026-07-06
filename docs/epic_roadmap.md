@@ -48,7 +48,7 @@ This is the next-step roadmap for turning TrustLens from a strong capstone into 
    - Provider Settings can override the hosted API base URL from the browser during a static demo.
 
 6. **Clean Demo Samples** *(implemented in demo build)*
-   - Keeps the public sample strip simple: DHL SMS, Bank Email, and screenshot fixtures.
+   - Keeps the public sample strip simple: DHL SMS, PayPal Alert, and screenshot fixtures.
    - Offline Demo Mode routes AI enrichment through deterministic fallback for stable judging.
 
 ## Presentation Angle

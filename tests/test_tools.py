@@ -17,7 +17,7 @@ from trustlens_agent.tools import (  # noqa: E402
 
 class TrustLensToolTests(unittest.TestCase):
     def test_redact_pii_masks_common_sensitive_values(self):
-        text = "Email john@example.com, phone +40722334455, CNP 1900101998877, card 4111 1111 1111 1111"
+        text = "Email john@example.com, phone +1 202 555 0148, SSN 123-45-6789, card 4111 1111 1111 1111"
         redacted = redact_pii(text)
 
         self.assertIn("[REDACTED_EMAIL]", redacted)
@@ -42,22 +42,23 @@ class TrustLensToolTests(unittest.TestCase):
         self.assertNotIn("Impersonates brand 'ing' in a suspicious domain layout", report["indicators"])
 
     def test_domain_inspection_flags_exact_short_brand_tokens(self):
-        report = inspect_domain_pattern("bt-verificare-securizata.today")
+        report = inspect_domain_pattern("paypal-security-center.live")
 
         self.assertEqual(report["verdict"], "High")
-        self.assertIn("bt", report["detected_brands"])
+        self.assertIn("paypal", report["detected_brands"])
         self.assertTrue(any("Suspicious top-level domain" in item for item in report["indicators"]))
 
     def test_social_engineering_and_score_work_together(self):
         indicators = detect_social_engineering(
-            "Banca Transilvania: cont blocat urgent, login pentru verificare card"
+            "PayPal Security: account blocked urgent, verify login and card details"
         )
-        domain_report = inspect_domain_pattern("bt-verificare-securizata.today")
+        domain_report = inspect_domain_pattern("paypal-security-center.live")
         summary = score_risk([domain_report], indicators)
 
         self.assertGreaterEqual(len(indicators), 3)
         self.assertEqual(summary["verdict"], "High")
-        self.assertGreaterEqual(summary["risk_score"], 95)
+        self.assertGreaterEqual(summary["risk_score"], 90)
+        self.assertLess(summary["risk_score"], 100)
         self.assertGreaterEqual(len(summary["score_trace"]), 3)
         self.assertEqual(summary["score_trace"][0]["source"], "domain_pattern")
         self.assertTrue(any(item["label"] == "Domain plus persuasion combo" for item in summary["score_trace"]))
@@ -67,7 +68,7 @@ class TrustLensToolTests(unittest.TestCase):
             text="raw",
             redacted_text="redacted",
             risk_score=90,
-            indicators=[{"category": "Brand Impersonation", "detail": "Claimed source: BT"}],
+            indicators=[{"category": "Brand Impersonation", "detail": "Claimed source: PayPal"}],
             safe_steps=["DO NOT click any link in the message."],
         )
 

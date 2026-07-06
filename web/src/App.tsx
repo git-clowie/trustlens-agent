@@ -15,7 +15,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const DEFAULT_API_BASE = normalizeApiBase(configuredApiBase || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : ''));
 const SHOW_PROVIDER_SETTINGS = window.TRUSTLENS_CONFIG?.SHOW_PROVIDER_SETTINGS ?? import.meta.env.DEV;
 const PROVIDER_SETTINGS_ENABLED = SHOW_PROVIDER_SETTINGS || urlParams.has('settings');
-const HISTORY_KEY = 'trustlens_case_history_v1';
+const HISTORY_KEY = 'trustlens_case_history_v2';
 const API_BASE_STORAGE_KEY = 'trustlens_api_base_v1';
 const OFFLINE_DEMO_STORAGE_KEY = 'trustlens_offline_demo_v1';
 const DEFAULT_OPENROUTER_MODEL = 'google/gemma-4-31b-it';
@@ -25,17 +25,17 @@ const SAMPLES = {
   courier: {
     source: 'SMS',
     situation: 'before_click',
-    text: 'Dear DHL customer, your package has an outstanding customs fee of 14.99 RON. Please pay immediately at http://dhl.customs-fee-handling.xyz/portal to avoid return.'
+    text: 'DHL Express: your parcel has an unpaid customs fee of $3.49. Pay now at http://dhl.customs-fee-handling.xyz/portal to avoid return.'
   },
   bank: {
-    source: 'SMS',
+    source: 'Email',
     situation: 'before_click',
-    text: 'Banca Transilvania: Your account has been temporarily restricted. Log in urgently at https://bt-verificare-securizata.today/login to unlock it within 24 hours.'
+    text: 'PayPal Security: a new sign-in was blocked. Verify your account within 30 minutes at https://paypal-security-center.live/login.'
   },
   lottery: {
     source: 'Email',
     situation: 'before_click',
-    text: 'Dear winner! Your email john.doe@gmail.com won $50,000 in Google Anniversary Promo. Write to claim@google-rewards.xyz with your phone +40722334455 and SSN 1900101998877.'
+    text: 'Congratulations! Your email john.doe@gmail.com won a $50,000 Google Rewards prize. Reply with your phone +1 202 555 0148 and SSN 123-45-6789 to claim.'
   },
   romance: {
     source: 'Chat',
@@ -49,12 +49,6 @@ const SCREENSHOT_FIXTURES = {
     label: 'Bank Screen',
     preview: '/fixtures/screenshots/bank-alert.svg',
     marker: 'TRUSTLENS_FIXTURE_BANK_SCREENSHOT',
-    situation: 'before_click',
-  },
-  courier: {
-    label: 'Courier Screen',
-    preview: '/fixtures/screenshots/courier-fee.svg',
-    marker: 'TRUSTLENS_FIXTURE_COURIER_SCREENSHOT',
     situation: 'before_click',
   },
   lottery: {
@@ -317,6 +311,7 @@ export default function App() {
   const openCase = (record: CaseRecord) => {
     setReport(record.report);
     setReportSituation(record.situation);
+    setReportTab('plan');
     setInputText(record.report.redacted_text || '');
     setImageFile(null);
     setImagePayload(null);
@@ -349,6 +344,7 @@ export default function App() {
     setLoading(true);
     setReport(null);
     setReportSituation(situationToScan);
+    setReportTab('plan');
     setCopySuccess(false);
     setShareSuccess(false);
 
@@ -471,6 +467,7 @@ export default function App() {
     setActiveTrace([]);
     setShowHelp(false);
     setShowProviderSettings(false);
+    setReportTab('plan');
   };
 
   // State machine derivation
@@ -527,12 +524,12 @@ export default function App() {
         {/* IDLE STATE (HERO) */}
         {appState === 'idle' && (
           <>
-            <div className="panel" style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-              <h3 className="panel-title" style={{ justifyContent: 'center', fontSize: '1.5rem', marginBottom: '2rem' }}>
+            <div className="panel home-panel">
+              <h3 className="panel-title home-title">
                 Analyze a Suspicious Message
               </h3>
             
-            <div className="omnibox" style={{ position: 'relative', borderRadius: '12px', border: '1px solid var(--panel-border)', background: 'rgba(0,0,0,0.3)', overflow: 'hidden', transition: 'all 0.3s', marginBottom: '1.5rem', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)' }}>
+            <div className="omnibox">
               {imageFile ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2.5rem', gap: '1.5rem', position: 'relative' }}>
                   <img 
@@ -558,10 +555,10 @@ export default function App() {
                     style={{ width: '100%', minHeight: '180px', padding: '1.5rem', background: 'transparent', border: 'none', resize: 'vertical', color: 'var(--text-primary)', outline: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.9rem' }}
                     title="Message content"
                   />
-                  <div style={{ borderTop: '1px solid var(--panel-border)', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                  <div className="omnibox-toolbar">
                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Or upload screenshot:</span>
                     <div style={{ position: 'relative' }}>
-                      <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', pointerEvents: 'none' }}>
+                      <button className="btn btn-secondary has-tooltip" data-tooltip="Analyze a screenshot instead of text" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', pointerEvents: 'none' }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.25rem', verticalAlign: 'text-bottom' }}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         Browse Image
                       </button>
@@ -572,22 +569,25 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', padding: '0 0.5rem' }}>
+            <div className="status-selector">
               <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center', fontFamily: 'var(--font-mono)' }}>Select Status to Improve Accuracy</label>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button 
                   className="btn btn-secondary" 
                   onClick={() => setSituation('before_click')} 
+                  title="Choose this if you have not clicked or replied yet."
                   style={{ flex: '1 1 120px', padding: '0.6rem', fontSize: '0.75rem', borderColor: situation === 'before_click' ? 'var(--accent-primary)' : 'var(--panel-border)', color: situation === 'before_click' ? 'var(--text-primary)' : 'var(--text-muted)', background: situation === 'before_click' ? 'rgba(0, 242, 254, 0.05)' : 'rgba(255,255,255,0.02)' }}
                 >Not Clicked</button>
                 <button 
                   className="btn btn-secondary" 
                   onClick={() => setSituation('clicked_only')} 
+                  title="Choose this if you opened the link but did not share data."
                   style={{ flex: '1 1 120px', padding: '0.6rem', fontSize: '0.75rem', borderColor: situation === 'clicked_only' ? 'var(--accent-primary)' : 'var(--panel-border)', color: situation === 'clicked_only' ? 'var(--text-primary)' : 'var(--text-muted)', background: situation === 'clicked_only' ? 'rgba(0, 242, 254, 0.05)' : 'rgba(255,255,255,0.02)' }}
                 >Clicked Link</button>
                 <button 
                   className="btn btn-secondary" 
                   onClick={() => setSituation('compromised')} 
+                  title="Choose this if you entered credentials, payment, or personal data."
                   style={{ flex: '1 1 120px', padding: '0.6rem', fontSize: '0.75rem', borderColor: situation === 'compromised' ? 'var(--accent-primary)' : 'var(--panel-border)', color: situation === 'compromised' ? 'var(--text-primary)' : 'var(--text-muted)', background: situation === 'compromised' ? 'rgba(0, 242, 254, 0.05)' : 'rgba(255,255,255,0.02)' }}
                 >Data Shared</button>
               </div>
@@ -597,19 +597,20 @@ export default function App() {
               className="btn btn-primary"
               onClick={() => handleInvestigate()}
               disabled={!inputText.trim() && !imageFile}
+              title="Run the TrustLens security pipeline."
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               Analyze Message
             </button>
 
             {/* Quick Samples */}
-            <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+            <div className="sample-section">
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Try a sample case:</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: 'var(--accent-primary)' }} onClick={() => selectSample('courier')}>DHL SMS</button>
-                <button className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectSample('bank')}>Bank Email</button>
+              <div className="sample-grid">
+                <button className="btn btn-secondary sample-btn primary-sample" data-tooltip="High-risk parcel fee SMS" onClick={() => selectSample('courier')}>DHL SMS</button>
+                <button className="btn btn-secondary sample-btn" data-tooltip="Account verification phishing email" onClick={() => selectSample('bank')}>PayPal Alert</button>
                 {Object.entries(SCREENSHOT_FIXTURES).map(([key, fixture]) => (
-                  <button key={key} className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }} onClick={() => selectImageSample(key as keyof typeof SCREENSHOT_FIXTURES)}>
+                  <button key={key} className="btn btn-secondary sample-btn" data-tooltip="Load a synthetic screenshot fixture" onClick={() => selectImageSample(key as keyof typeof SCREENSHOT_FIXTURES)}>
                     {fixture.label}
                   </button>
                 ))}
@@ -723,27 +724,27 @@ export default function App() {
 
                 {/* Score & Signatures Column */}
                 <div className="score-col">
-                  <div className="gauge-container" style={{ width: '100px', height: '100px', flexShrink: 0 }}>
-                    <svg width="100" height="100" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', position: 'absolute', inset: 0 }}>
+                  <div className="gauge-container threat-gauge" aria-label={`Risk score ${report.risk_score} out of 100`}>
+                    <svg width="112" height="112" viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', position: 'absolute', inset: 0 }}>
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--panel-bg-hover)" strokeWidth="3" />
                       {/* Glow Layer */}
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="5.5" strokeLinecap="round" style={{ opacity: 0.18, transition: 'stroke-dasharray 1s ease-out' }} />
                       {/* Main Stroke */}
                       <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={getScoreColor(report.risk_score)} strokeDasharray={`${report.risk_score}, 100`} strokeWidth="3.2" strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s ease-out' }} />
                     </svg>
-                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score), fontSize: '1.85rem' }}>
+                    <div className="gauge-val" style={{ color: getScoreColor(report.risk_score) }}>
                       {report.risk_score}
-                      <span style={{ fontSize: '0.62rem', marginTop: '0.2rem', color: 'var(--text-muted)' }}>Threat</span>
+                      <span>Risk score</span>
                     </div>
                   </div>
                   <div className="signatures-summary">
                     <span style={{ fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '0.1rem' }}>Signatures</span>
                     {report.breakdown.slice(0, 3).map((item, idx) => {
-                      const cleanItem = item.replace(/^[\[\s"']+|[\]\s"']+$/g, '');
+                      const cleanItem = item.trim().replace(/^["']+|["']+$/g, '').replace(/^\[+|\]+$/g, '');
                       return (
-                        <div key={idx} className="signature-mini-tag" style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={getScoreColor(report.risk_score)} strokeWidth="3" style={{ flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cleanItem}</span>
+                        <div key={idx} className="signature-mini-tag" title={cleanItem} style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
+                          {getBreakdownIcon(cleanItem, getScoreColor(report.risk_score))}
+                          <span>{cleanItem}</span>
                         </div>
                       );
                     })}
@@ -767,15 +768,15 @@ export default function App() {
             {/* Tabbed details view */}
             <div style={{ width: '100%' }}>
               <div className="report-tabs">
-                <button className={`tab-btn ${reportTab === 'plan' ? 'active' : ''}`} onClick={() => setReportTab('plan')}>
+                <button className={`tab-btn ${reportTab === 'plan' ? 'active' : ''}`} onClick={() => setReportTab('plan')} title="View the recovery or prevention steps.">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                   Action Plan
                 </button>
-                <button className={`tab-btn ${reportTab === 'analysis' ? 'active' : ''}`} onClick={() => setReportTab('analysis')}>
+                <button className={`tab-btn ${reportTab === 'analysis' ? 'active' : ''}`} onClick={() => setReportTab('analysis')} title="View evidence, model analysis, domains, and score trace.">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
                   Threat Analytics
                 </button>
-                <button className={`tab-btn ${reportTab === 'packet' ? 'active' : ''}`} onClick={() => setReportTab('packet')}>
+                <button className={`tab-btn ${reportTab === 'packet' ? 'active' : ''}`} onClick={() => setReportTab('packet')} title="Copy, export, or print the compact case packet.">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   Official Case Packet
                 </button>
@@ -853,7 +854,7 @@ export default function App() {
                           <div className="metric-grid">
                             {getEvidenceStats(report).map((stat) => (
                               <div key={stat.label} className="metric-item">
-                                <span className="metric-label">{stat.label}</span>
+                                <span className="metric-label">{getMetricIcon(stat.label, stat.color)} {stat.label}</span>
                                 <strong className="metric-value" style={{ color: stat.color }}>{stat.value}</strong>
                                 <span className="metric-note">{stat.note}</span>
                               </div>
@@ -877,7 +878,7 @@ export default function App() {
                         {report.score_trace?.length > 0 && (
                           <div className="panel">
                             <h3 className="panel-title">
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-secondary)" strokeWidth="2"><path d="M3 3v18h18"/><path d="M7 14l3-3 4 4 5-8"/><circle cx="7" cy="14" r="1.5"/><circle cx="10" cy="11" r="1.5"/><circle cx="14" cy="15" r="1.5"/><circle cx="19" cy="7" r="1.5"/></svg>
                               Trace Log
                             </h3>
                             <div className="score-trace-list">
@@ -936,25 +937,29 @@ export default function App() {
                         Official Case Packet
                       </h3>
                       <div className="report-actions">
-                        <button className="btn btn-secondary" onClick={handleCopy} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                        <button className="btn btn-secondary" onClick={handleCopy} title="Copy the full sanitized report." style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                           {copySuccess ? 'Copied!' : 'Copy Report'}
                         </button>
-                        <button className="btn btn-secondary" onClick={handleCopySummary} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                        <button className="btn btn-secondary" onClick={handleCopySummary} title="Copy a short shareable summary." style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
                           {shareSuccess ? 'Copied!' : 'Copy Summary'}
                         </button>
-                        <button className="btn btn-secondary" onClick={handleExportJson} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                        <button className="btn btn-secondary" onClick={handleExportJson} title="Export the full structured JSON evidence." style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 13l-2 2 2 2"/><path d="M14 13l2 2-2 2"/></svg>
                           Export JSON
                         </button>
-                        <button className="btn btn-secondary" onClick={handlePrintPacket} style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                        <button className="btn btn-secondary" onClick={handlePrintPacket} title="Open the browser print dialog for PDF export." style={{ padding: '0.5rem 1rem', fontSize: '0.75rem' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                           Print PDF
                         </button>
                       </div>
                     </div>
 
-                    <div className="report-summary-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                    <div className="report-summary-grid packet-summary-grid">
                       <div className="report-summary-item" style={{ borderLeft: `3px solid ${getScoreColor(report.risk_score)}` }}>
                         <span>Risk</span>
-                        <strong style={{ color: getScoreColor(report.risk_score) }}>{report.verdict} // {report.risk_score}</strong>
+                        <strong style={{ color: getScoreColor(report.risk_score) }}>{report.verdict} / {report.risk_score}</strong>
                       </div>
                       <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-secondary)' }}>
                         <span>Context</span>
@@ -972,7 +977,7 @@ export default function App() {
 
                     <div className="report-chip-row">
                       {getTopScoreContributors(report).map((item, idx) => (
-                        <span key={`${item.label}-${idx}`} className="report-chip animate-pulse" style={{ borderColor: getTraceColor(item), color: getTraceColor(item), background: `${getTraceColor(item)}12` }}>
+                        <span key={`${item.label}-${idx}`} className="report-chip" style={{ borderColor: getTraceColor(item), color: getTraceColor(item), background: `${getTraceColor(item)}12` }}>
                           +{item.impact} {item.label}
                         </span>
                       ))}
@@ -980,12 +985,11 @@ export default function App() {
 
                     <div className="report-preview-container">
                       <div className="report-preview-header">
-                        <div className="window-dots">
-                          <span className="dot dot-red"></span>
-                          <span className="dot dot-yellow"></span>
-                          <span className="dot dot-green"></span>
+                        <div className="report-preview-title">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 12l2 2 4-4"/><path d="M21 12c.552 0 1-.448 1-1V5c0-.552-.448-1-1-1H3c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1"/><path d="M3 12v7c0 .552.448 1 1 1h16c.552 0 1-.448 1-1v-7"/></svg>
+                          <span>Report Draft</span>
                         </div>
-                        <span className="window-title">CASE_PACKET_SECURE_HASH.TXT</span>
+                        <span className="window-title">Sanitized case packet</span>
                       </div>
                       <pre className="redacted-view report-preview">
                         {report.report_draft}
@@ -1113,31 +1117,31 @@ export default function App() {
         </div>
       )}
 
-      <footer style={{ marginTop: '4rem', padding: '2rem 1rem 3rem 1rem', borderTop: '1px solid var(--panel-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', width: '100%' }}>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <div className="badge">
+      <footer className="runtime-footer">
+        <div className="runtime-strip" aria-label="Runtime status">
+          <span className="runtime-pill" title={healthStatus.apiReachable ? 'Backend API is reachable.' : 'Backend API is not reachable from this browser.'}>
             <span className={`status-dot ${healthStatus.apiReachable ? 'active' : 'inactive'}`}></span>
-            API: {healthStatus.apiReachable ? 'Connected' : 'Disconnected'}
-          </div>
-          <div className="badge">
-            <span className="status-dot active"></span>
-            MCP Tools: Implemented
-          </div>
-          <div className="badge" title={healthStatus.model || 'OpenRouter model'}>
+            API {healthStatus.apiReachable ? 'connected' : 'offline'}
+          </span>
+          <span className="runtime-pill" title={healthStatus.model || DEFAULT_OPENROUTER_MODEL}>
             <span className={`status-dot ${healthStatus.openRouter && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
-            Gemma Analyst: {offlineDemoMode ? 'Demo Fallback' : healthStatus.openRouter ? 'Live' : 'Local Fallback'}
-          </div>
-          <div className="badge">
+            Gemma {offlineDemoMode ? 'demo' : healthStatus.openRouter ? 'live' : 'fallback'}
+          </span>
+          <span className="runtime-pill" title="Screenshot OCR uses Gemini when configured, otherwise deterministic demo fixtures.">
             <span className={`status-dot ${healthStatus.keySet && !offlineDemoMode ? 'active' : 'inactive'}`}></span>
-            Gemini OCR: {offlineDemoMode ? 'Demo Fallback' : healthStatus.keySet ? 'Live' : 'Fixture Fallback'}
-          </div>
-          <div className="badge">
+            OCR {offlineDemoMode ? 'demo' : healthStatus.keySet ? 'live' : 'fixtures'}
+          </span>
+          <span className="runtime-pill" title="Google ADK coordinator availability.">
             <span className={`status-dot ${healthStatus.adk ? 'active' : 'inactive'}`}></span>
-            ADK Agent: {healthStatus.adk ? 'Active' : 'Tool Fallback'}
-          </div>
+            ADK {healthStatus.adk ? 'active' : 'fallback'}
+          </span>
+          <span className="runtime-pill" title="MCP server tools are included in the project.">
+            <span className="status-dot active"></span>
+            MCP ready
+          </span>
         </div>
-        <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'var(--text-muted)' }}>
-          Built by <a href="https://pixek.xyz" target="_blank" rel="noreferrer" style={{ color: 'var(--accent-secondary)', textDecoration: 'none', fontWeight: 700, textShadow: '0 0 10px rgba(139, 92, 246, 0.4)' }}>pixek.xyz</a>
+        <div className="footer-credit">
+          Built by <a href="https://pixek.xyz" target="_blank" rel="noreferrer">pixek.xyz</a>
         </div>
       </footer>
     </div>
@@ -1301,6 +1305,47 @@ function getEvidenceStats(report: InvestigationReport) {
       color: getScoreColor(report.risk_score),
     },
   ];
+}
+
+function getMetricIcon(label: string, color: string) {
+  const props = { width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2.4, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  if (label === 'Links') {
+    return <svg {...props}><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07"/></svg>;
+  }
+  if (label === 'Max Domain Risk') {
+    return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 0 20"/><path d="M12 2a15.3 15.3 0 0 0 0 20"/></svg>;
+  }
+  if (label === 'Social Hooks') {
+    return <svg {...props}><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>;
+  }
+  if (label === 'Agent Trace') {
+    return <svg {...props}><path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h16"/><circle cx="18" cy="12" r="2"/></svg>;
+  }
+  if (label === 'AI Analyst') {
+    return <svg {...props}><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>;
+  }
+  return <svg {...props}><path d="M20 6 9 17l-5-5"/></svg>;
+}
+
+function getBreakdownIcon(text: string, color: string) {
+  const normalized = text.toLowerCase();
+  const props = { width: 13, height: 13, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 2.5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, style: { flexShrink: 0 } };
+  if (normalized.includes('link') || normalized.includes('destination')) {
+    return <svg {...props}><path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4.93"/><path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07L13 19.07"/></svg>;
+  }
+  if (normalized.includes('urgency') || normalized.includes('threat')) {
+    return <svg {...props}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+  }
+  if (normalized.includes('impersonate') || normalized.includes('trusted')) {
+    return <svg {...props}><path d="M12 3l8 4v5c0 5-3.4 8.7-8 9-4.6-.3-8-4-8-9V7l8-4z"/><path d="M9 12l2 2 4-4"/></svg>;
+  }
+  if (normalized.includes('payment') || normalized.includes('bank') || normalized.includes('fee')) {
+    return <svg {...props}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h2"/></svg>;
+  }
+  if (normalized.includes('credential') || normalized.includes('code') || normalized.includes('data')) {
+    return <svg {...props}><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+  }
+  return <svg {...props}><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>;
 }
 
 function buildShareSummary(report: InvestigationReport, situation: string) {

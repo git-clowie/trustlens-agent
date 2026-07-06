@@ -2,7 +2,7 @@
   <rect width="420" height="760" rx="44" fill="#020617"/>
   <rect x="26" y="24" width="368" height="712" rx="34" fill="#f8fafc"/>
   <rect x="26" y="24" width="368" height="86" rx="34" fill="#1d4ed8"/>
-  <text x="58" y="76" font-family="Arial, sans-serif" font-size="23" font-weight="800" fill="#fff">BT Account Guard</text>
+  <text x="58" y="76" font-family="Arial, sans-serif" font-size="23" font-weight="800" fill="#fff">Microsoft Guard</text>
   <text x="58" y="154" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#111827">Reactivate account</text>
   <text x="58" y="188" font-family="Arial, sans-serif" font-size="16" fill="#334155">Scan before the timer expires.</text>
   <rect x="96" y="230" width="228" height="228" rx="18" fill="#fff" stroke="#cbd5e1"/>
@@ -16,7 +16,7 @@
   <rect x="154" y="334" width="22" height="22" fill="#0f172a"/>
   <rect x="58" y="492" width="304" height="78" rx="18" fill="#eff6ff" stroke="#bfdbfe"/>
   <text x="82" y="526" font-family="Arial, sans-serif" font-size="15" fill="#1e3a8a">Fallback link:</text>
-  <text x="82" y="552" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#1e40af">bt-login-secure.qr-pay.top</text>
+  <text x="82" y="552" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#1e40af">microsoft-login-secure.top</text>
   <rect x="58" y="610" width="304" height="48" rx="16" fill="#dc2626"/>
   <text x="117" y="640" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#fff">Reactivate in 10 minutes</text>
   <text x="56" y="690" font-family="Arial, sans-serif" font-size="12" fill="#94a3b8">Synthetic TrustLens fixture - local demo only</text>

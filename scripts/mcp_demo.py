@@ -18,8 +18,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 SAMPLE_TEXT = (
-    "Banca Transilvania: cont blocat urgent. Confirmati cardul la "
-    "https://bt-verificare-securizata.today/login sau accesul va fi suspendat."
+    "PayPal Security: a new sign-in was blocked. Verify your account within "
+    "30 minutes at https://paypal-security-center.live/login."
 )
 
 

@@ -28,13 +28,13 @@ A step-by-step production plan and voiceover script to record a professional 2-t
 * **Visual on screen:** Click the "DHL SMS" quick sample button. Watch the timeline run through PII Redaction, Domain Inspection, Risk Synthesis, Safety Planner, and Gemma Analyst.
 * **Action:** Scroll down slowly to show the risk score, Evidence Analytics, Score Trace, domain audit, Gemma Analyst panel, and contextual action plan.
 * **Voiceover:**
-  > "With one click, TrustLens triggers a multi-step investigation pipeline. It redacts personal data locally, inspects the destination domain without opening it, detects social engineering tactics, scores the risk, and enriches the result with a Gemma analyst layer through OpenRouter when configured. In this DHL sample, the score reaches 100 out of 100 because of brand impersonation, a suspicious top-level domain, and artificial urgency."
+  > "With one click, TrustLens triggers a multi-step investigation pipeline. It redacts personal data locally, inspects the destination domain without opening it, detects social engineering tactics, scores the risk, and enriches the result with a Gemma analyst layer through OpenRouter when configured. In this DHL sample, the score lands in the high-risk range because of brand impersonation, a suspicious top-level domain, and a payment-pressure hook."
 
 ---
 
 ### Scene 3: Multimodal Vision OCR Demo (1:05 - 1:40)
 
-* **Visual on screen:** Press "Analyze Another Message", then click "Bank Screen", "Courier Screen", "Prize Screen", or "QR Screen".
+* **Visual on screen:** Press "Analyze Another Message", then click "Bank Screen", "Prize Screen", or "QR Screen".
 * **Action:** Show the "Multimodal Vision OCR" timeline step and the extracted text flowing into the same investigation dashboard.
 * **Voiceover:**
   > "TrustLens is multimodal. If a user receives a suspicious screenshot instead of text, the backend routes it through Gemini Vision OCR, transcribes the message, and feeds the text into the same safe investigation pipeline. The bundled screenshots are safe synthetic fixtures, so the demo stays repeatable with or without Gemini configured."

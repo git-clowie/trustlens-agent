@@ -7,17 +7,17 @@ SAMPLES = {
     'courier': {
         'source': 'SMS',
         'situation': 'before_click',
-        'text': 'Stimate client DHL, pachetul dvs. are o taxa vamala restanta de 14.99 RON. Va rugam sa platiti imediat pe http://dhl.customs-fee-handling.xyz/portal pentru a evita returnarea.'
+        'text': 'DHL Express: your parcel has an unpaid customs fee of $3.49. Pay now at http://dhl.customs-fee-handling.xyz/portal to avoid return.'
     },
     'bank': {
-        'source': 'SMS',
+        'source': 'Email',
         'situation': 'before_click',
-        'text': 'Banca Transilvania: Contul dumneavoastra a fost temporar restrictionat. Autentificati-va urgent pe https://bt-verificare-securizata.today/login pentru deblocare in 24 de ore.'
+        'text': 'PayPal Security: a new sign-in was blocked. Verify your account within 30 minutes at https://paypal-security-center.live/login.'
     },
     'lottery': {
         'source': 'Email',
         'situation': 'before_click',
-        'text': 'Dear winner! Your email john.doe@gmail.com won $50,000 in Google Anniversary Promo. Write to claim@google-rewards.xyz with your phone +40722334455 and CNP 1900101998877.'
+        'text': 'Congratulations! Your email john.doe@gmail.com won a $50,000 Google Rewards prize. Reply with your phone +1 202 555 0148 and SSN 123-45-6789 to claim.'
     },
     'romance': {
         'source': 'Chat',

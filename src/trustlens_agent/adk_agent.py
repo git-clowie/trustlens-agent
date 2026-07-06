@@ -28,24 +28,24 @@ except ImportError:
 
 OCR_FIXTURE_TEXTS = {
     "TRUSTLENS_FIXTURE_BANK": (
-        "BCR Alert: Contul dvs. a fost blocat. Confirmati datele de siguranta "
-        "pe https://bcr-securitate.net/login de urgenta."
+        "PayPal Security: Your account is temporarily limited. Confirm your "
+        "identity at https://paypal-account-review.net/login within 30 minutes."
     ),
     "TRUSTLENS_FIXTURE_COURIER": (
-        "Stimate client Posta Romana, aveti un pachet retinut in depozit. "
-        "Achitati taxa de 9.40 RON pe https://posta-romana-tarife.info pentru livrare."
+        "FedEx Delivery: Your parcel is on hold for an unpaid customs fee. "
+        "Pay $2.99 at https://fedex-delivery-fee.info to release shipment."
     ),
     "TRUSTLENS_FIXTURE_LOTTERY": (
-        "Felicitari! Ati castigat un voucher de 5000 RON. Confirmati emailul, telefonul "
-        "si CNP-ul la https://google-premii-validare.xyz/claim."
+        "Congratulations! You won a $5,000 Google Rewards voucher. Confirm your "
+        "phone, email, and SSN at https://google-rewards-claim.xyz/claim."
     ),
     "TRUSTLENS_FIXTURE_ROMANCE": (
         "Iubire, am nevoie urgent de 300 EUR pentru viza. Te rog trimite banii astazi "
         "si nu spune nimanui."
     ),
     "TRUSTLENS_FIXTURE_QR": (
-        "Scaneaza codul QR pentru a reactiva contul BT in 10 minute: "
-        "https://bt-login-secure.qr-pay.top"
+        "Scan this QR code to reactivate your Microsoft account in 10 minutes: "
+        "https://microsoft-login-secure.top"
     ),
 }
 
@@ -68,15 +68,15 @@ def ocr_screenshot(image_base64: str, mime_type: str, force_local: bool = False)
 
     if force_local:
         print("[!] Offline demo mode enabled. Using local OCR fallback.")
-        return "Stimate client Posta Romana, aveti un pachet retinut in depozit. Achitati taxa de 9.40 RON pe https://posta-romana-tarife.info pentru livrare."
+        return "FedEx Delivery: Your parcel is on hold for an unpaid customs fee. Pay $2.99 at https://fedex-delivery-fee.info to release shipment."
 
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("[!] No GEMINI_API_KEY set. Using local Mock OCR fallbacks.")
         # Simulating transcription of a fake screenshot based on content hint
-        if "bank" in image_base64.lower() or "bcr" in image_base64.lower() or "card" in image_base64.lower():
-            return "BCR Alert: Contul dvs. a fost blocat. Confirmati datele de siguranta pe https://bcr-securitate.net/login de urgenta."
-        return "Stimate client Posta Romana, aveti un pachet retinut in depozit. Achitati taxa de 9.40 RON pe https://posta-romana-tarife.info pentru livrare."
+        if "bank" in image_base64.lower() or "paypal" in image_base64.lower() or "card" in image_base64.lower():
+            return "PayPal Security: Your account is temporarily limited. Confirm your identity at https://paypal-account-review.net/login within 30 minutes."
+        return "FedEx Delivery: Your parcel is on hold for an unpaid customs fee. Pay $2.99 at https://fedex-delivery-fee.info to release shipment."
         
     try:
         # Normalize base64 string (strip header if present)
@@ -102,7 +102,7 @@ def ocr_screenshot(image_base64: str, mime_type: str, force_local: bool = False)
         return response.text.strip()
     except Exception as e:
         print(f"[!] Multimodal OCR failed: {str(e)}. Using fallback text.")
-        return "Stimate client Posta Romana, aveti un pachet retinut in depozit. Achitati taxa de 9.40 RON pe https://posta-romana-tarife.info pentru livrare."
+        return "FedEx Delivery: Your parcel is on hold for an unpaid customs fee. Pay $2.99 at https://fedex-delivery-fee.info to release shipment."
 
 
 # Attempt to import google-adk components
