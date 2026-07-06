@@ -74,11 +74,16 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 2rem;
-  background: rgba(3, 7, 18, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  gap: 1rem;
+  min-height: 72px;
+  padding: 0.8rem clamp(1rem, 2.2vw, 2rem);
+  background:
+    linear-gradient(180deg, rgba(9, 14, 27, 0.9), rgba(3, 7, 18, 0.72)),
+    rgba(3, 7, 18, 0.78);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
   border-bottom: 1px solid var(--panel-border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -91,39 +96,77 @@ header {
 }
 
 .logo-reset {
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   cursor: pointer;
   outline: none;
+  padding: 0.25rem 0.45rem 0.25rem 0.25rem;
   user-select: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.logo-reset:hover {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: var(--panel-border);
+  transform: translateY(-1px);
 }
 
 .logo-reset:focus-visible {
   box-shadow: 0 0 0 2px rgba(0,242,254,0.45);
 }
 
-.logo-section h1 {
+.brand-title {
   font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
+  font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.72rem);
+  font-weight: 900;
+  letter-spacing: 0.035em;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(0, 242, 254, 0.18);
+  border-radius: 12px;
+  color: var(--accent-primary);
+  background:
+    radial-gradient(circle at 45% 38%, rgba(255, 255, 255, 0.22), transparent 26%),
+    linear-gradient(145deg, rgba(0, 242, 254, 0.18), rgba(139, 92, 246, 0.08)),
+    rgba(255, 255, 255, 0.035);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 24px rgba(0, 242, 254, 0.12), inset 0 0 18px rgba(255, 255, 255, 0.045);
+  flex: 0 0 auto;
+}
+
+.brand-mark svg {
+  filter: drop-shadow(0 0 7px rgba(0, 242, 254, 0.7));
+}
+
+.brand-wordmark {
+  color: var(--text-primary);
   text-shadow: 0 0 10px rgba(255,255,255,0.2);
 }
 
 /* Status Badges */
 .status-bar {
   display: flex;
-  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
 }
 
 .badge {
-  background: rgba(255,255,255,0.05);
+  min-height: 32px;
+  background: rgba(255,255,255,0.035);
   border: 1px solid var(--panel-border);
   color: var(--text-secondary);
-  padding: 0.35rem 0.85rem;
+  padding: 0.35rem 0.78rem;
   border-radius: 9999px;
   font-family: var(--font-mono);
   font-size: 0.7rem;
@@ -225,27 +268,29 @@ header {
 }
 
 .sample-section {
-  margin-top: 2.25rem;
-  padding-top: 1.35rem;
+  margin-top: 1.65rem;
+  padding-top: 1rem;
   border-top: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.7rem;
 }
 
 .sample-grid {
-  width: min(100%, 760px);
+  width: min(100%, 620px);
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.45rem;
 }
 
 .sample-btn {
-  min-height: 42px;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.78rem;
+  min-height: 34px;
+  padding: 0.42rem 0.55rem;
+  font-size: 0.68rem;
+  line-height: 1.15;
   white-space: normal;
+  border-radius: 7px;
 }
 
 .primary-sample {
@@ -734,10 +779,10 @@ button.info-item {
 
 /* Action Steps */
 .step-card {
-  background: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.24);
   border: 1px solid var(--panel-border);
-  padding: 1.25rem;
-  border-radius: 12px;
+  padding: 1.1rem;
+  border-radius: 8px;
   display: flex;
   gap: 1.25rem;
   align-items: flex-start;
@@ -748,21 +793,13 @@ button.info-item {
 }
 
 .step-card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0; width: 4px;
-  background: var(--accent-secondary);
-  opacity: 0.5;
-  transition: opacity 0.2s;
+  display: none;
 }
 
 .step-card:hover {
-  border-color: var(--panel-border-focus);
-  transform: translateX(4px);
-  background: rgba(0,0,0,0.5);
-  box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.025);
 }
-.step-card:hover::before { opacity: 1; background: var(--accent-primary); }
 
 .step-icon-wrapper {
   flex-shrink: 0;
@@ -880,12 +917,11 @@ button.info-item {
 }
 
 .report-action-card {
-  border: 1px solid rgba(0,242,254,0.24);
-  border-left: 4px solid var(--accent-primary);
+  border: 1px solid var(--panel-border);
   border-radius: 8px;
-  background: linear-gradient(135deg, rgba(0,242,254,0.08), rgba(139,92,246,0.07));
+  background: rgba(0,0,0,0.24);
   padding: 0.95rem;
-  box-shadow: 0 4px 20px rgba(0,242,254,0.05);
+  box-shadow: none;
 }
 
 .report-action-card span {
@@ -1110,21 +1146,36 @@ button.info-item {
 /* Mobile Optimizations */
 @media (max-width: 768px) {
   header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    align-items: flex-start;
+    gap: 0.75rem;
+    min-height: 62px;
+    padding: 0.65rem 0.8rem;
+    align-items: center;
   }
   .status-bar {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
+    justify-content: flex-end;
     flex-wrap: wrap;
   }
   .panel {
     padding: 1.5rem;
   }
-  .logo-section h1 {
-    font-size: 1.25rem;
+  .brand-title {
+    font-size: 1.28rem;
+    letter-spacing: 0.025em;
+  }
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+  .brand-mark svg {
+    width: 21px;
+    height: 21px;
+  }
+  .badge {
+    min-height: 30px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.66rem;
   }
   .main-content {
     padding: 1.5rem 1rem;
@@ -1141,6 +1192,13 @@ button.info-item {
   }
   .sample-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 360px);
+    gap: 0.45rem;
+  }
+  .sample-btn {
+    min-height: 32px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.66rem;
   }
   .metric-grid {
     grid-template-columns: 1fr;
@@ -1166,6 +1224,19 @@ button.info-item {
   .runtime-strip {
     justify-content: flex-start;
     width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .brand-wordmark {
+    font-size: 1.08rem;
+  }
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+  }
+  .badge {
+    padding-inline: 0.55rem;
   }
 }
 
@@ -1318,7 +1389,7 @@ button.info-item {
   background: rgba(255, 255, 255, 0.02);
   padding: 0.45rem 0.6rem;
   border-radius: 6px;
-  border-left: 3px solid var(--accent-primary);
+  border: 1px solid var(--panel-border);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -1339,12 +1410,11 @@ button.info-item {
 }
 
 .report-action-card {
-  border: 1px solid rgba(0, 242, 254, 0.12);
-  border-left: 4px solid var(--accent-primary);
+  border: 1px solid var(--panel-border);
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(0, 242, 254, 0.05), rgba(139, 92, 246, 0.03));
+  background: rgba(0, 0, 0, 0.24);
   padding: 1rem 1.25rem;
-  box-shadow: 0 4px 20px rgba(0, 242, 254, 0.03);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   justify-content: center;

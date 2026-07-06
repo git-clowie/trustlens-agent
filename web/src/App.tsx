@@ -402,14 +402,11 @@ export default function App() {
       persistCase(data, situationToScan);
     } catch (err) {
       console.error(err);
-      setActiveTrace((prev) => {
-        const next = [...prev];
-        const activeIdx = next.findIndex(s => s.status === 'running' || s.status === 'pending');
-        if (activeIdx !== -1) {
-          next[activeIdx] = { step: 'Error', status: 'pending', detail: 'API is unreachable or not configured.' };
-        }
-        return next;
-      });
+      const demoReport = buildClientDemoReport(textToScan, situationToScan, typeof imageToScan === 'string' ? imageToScan : null);
+      if (demoReport.extracted_text) setInputText(demoReport.extracted_text);
+      setActiveTrace(demoReport.trace);
+      setReport(demoReport);
+      persistCase(demoReport, situationToScan);
     } finally {
       setLoading(false);
     }
@@ -490,13 +487,15 @@ export default function App() {
             }
           }}
         >
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase' }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-primary)', filter: 'drop-shadow(0 0 5px var(--accent-primary))' }}>
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" opacity="0.2" fill="currentColor"/>
-              <circle cx="12" cy="12" r="3" fill="currentColor" />
-              <path d="M12 9a3 3 0 0 0-3 3" stroke="#fff" strokeWidth="1" />
-            </svg>
-            TrustLens
+          <h1 className="brand-title">
+            <span className="brand-mark" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" opacity="0.2" fill="currentColor"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor" />
+                <path d="M12 9a3 3 0 0 0-3 3" stroke="#fff" strokeWidth="1" />
+              </svg>
+            </span>
+            <span className="brand-wordmark">TrustLens</span>
           </h1>
         </div>
         <div className="status-bar">
@@ -607,10 +606,10 @@ export default function App() {
             <div className="sample-section">
               <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Try a sample case:</span>
               <div className="sample-grid">
-                <button className="btn btn-secondary sample-btn primary-sample" data-tooltip="High-risk parcel fee SMS" onClick={() => selectSample('courier')}>DHL SMS</button>
-                <button className="btn btn-secondary sample-btn" data-tooltip="Account verification phishing email" onClick={() => selectSample('bank')}>PayPal Alert</button>
+                <button className="btn btn-secondary sample-btn primary-sample" data-tooltip="High-risk parcel fee SMS" title="Load the DHL parcel fee SMS sample." onClick={() => selectSample('courier')}>DHL SMS</button>
+                <button className="btn btn-secondary sample-btn" data-tooltip="Account verification phishing email" title="Load the PayPal account alert sample." onClick={() => selectSample('bank')}>PayPal Alert</button>
                 {Object.entries(SCREENSHOT_FIXTURES).map(([key, fixture]) => (
-                  <button key={key} className="btn btn-secondary sample-btn" data-tooltip="Load a synthetic screenshot fixture" onClick={() => selectImageSample(key as keyof typeof SCREENSHOT_FIXTURES)}>
+                  <button key={key} className="btn btn-secondary sample-btn" data-tooltip="Load a synthetic screenshot fixture" title={`Load the ${fixture.label.toLowerCase()} fixture.`} onClick={() => selectImageSample(key as keyof typeof SCREENSHOT_FIXTURES)}>
                     {fixture.label}
                   </button>
                 ))}
@@ -742,7 +741,7 @@ export default function App() {
                     {report.breakdown.slice(0, 3).map((item, idx) => {
                       const cleanItem = item.trim().replace(/^["']+|["']+$/g, '').replace(/^\[+|\]+$/g, '');
                       return (
-                        <div key={idx} className="signature-mini-tag" title={cleanItem} style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
+                        <div key={idx} className="signature-mini-tag" title={cleanItem}>
                           {getBreakdownIcon(cleanItem, getScoreColor(report.risk_score))}
                           <span>{cleanItem}</span>
                         </div>
@@ -753,7 +752,7 @@ export default function App() {
 
                 {/* Urgent Action Column */}
                 <div className="action-col">
-                  <div className="report-action-card" style={{ borderLeftColor: getScoreColor(report.risk_score) }}>
+                  <div className="report-action-card">
                     <span style={{ color: getScoreColor(report.risk_score), fontSize: '0.68rem', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.4rem' }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                       Immediate Next Move
@@ -786,7 +785,7 @@ export default function App() {
                 
                 {/* TAB 1: ACTION PLAN */}
                 {reportTab === 'plan' && (
-                  <div className="panel" style={{ borderTop: '2px solid var(--accent-secondary)' }}>
+                  <div className="panel">
                     <h3 className="panel-title">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-safe)" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                       Contextual Action Plan
@@ -816,7 +815,7 @@ export default function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     
                     {report.ai_analysis && (
-                      <div className="panel" style={{ borderLeft: `4px solid ${getPriorityColor(report.ai_analysis.recommended_priority)}` }}>
+                      <div className="panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
                           <h3 className="panel-title" style={{ marginBottom: 0 }}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -907,7 +906,7 @@ export default function App() {
                             </h3>
                             <div className="info-list">
                               {report.domain_reports.map((dom, i) => (
-                                <div key={i} className="info-item" style={{ borderLeft: `4px solid ${getScoreColor(dom.risk_score)}`, flexDirection: 'column', gap: '0.4rem', width: '100%', padding: '0.8rem' }}>
+                                <div key={i} className="info-item" style={{ flexDirection: 'column', gap: '0.4rem', width: '100%', padding: '0.8rem' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                                     <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontWeight: 500, fontSize: '0.85rem' }}>{dom.domain}</span>
                                     <span style={{ fontSize: '0.82rem', color: getScoreColor(dom.risk_score), fontWeight: 700 }}>{dom.risk_score}/100</span>
@@ -930,7 +929,7 @@ export default function App() {
 
                 {/* TAB 3: INCIDENT REPORT CASE PACKET */}
                 {reportTab === 'packet' && (
-                  <div className="panel report-pack" style={{ borderTop: '2px solid var(--accent-primary)' }}>
+                  <div className="panel report-pack">
                     <div className="report-pack-header">
                       <h3 className="panel-title" style={{ marginBottom: 0 }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -957,19 +956,19 @@ export default function App() {
                     </div>
 
                     <div className="report-summary-grid packet-summary-grid">
-                      <div className="report-summary-item" style={{ borderLeft: `3px solid ${getScoreColor(report.risk_score)}` }}>
+                      <div className="report-summary-item">
                         <span>Risk</span>
                         <strong style={{ color: getScoreColor(report.risk_score) }}>{report.verdict} / {report.risk_score}</strong>
                       </div>
-                      <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-secondary)' }}>
+                      <div className="report-summary-item">
                         <span>Context</span>
                         <strong>{getSituationLabel(reportSituation)}</strong>
                       </div>
-                      <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-primary)' }}>
+                      <div className="report-summary-item">
                         <span>Evidence</span>
                         <strong>{getPrimaryEvidence(report)}</strong>
                       </div>
-                      <div className="report-summary-item" style={{ borderLeft: '3px solid var(--text-secondary)' }}>
+                      <div className="report-summary-item">
                         <span>AI Analyst</span>
                         <strong>{getAiRouteLabel(report.ai_analysis)}</strong>
                       </div>
@@ -1199,6 +1198,213 @@ async function copyTextToClipboard(value: string) {
 function getImagePreviewSrc(value: string, mimeType?: string | null) {
   if (value.startsWith('data:') || value.startsWith('/') || value.startsWith('http')) return value;
   return `data:${mimeType || 'image/png'};base64,${value}`;
+}
+
+function buildClientDemoReport(rawText: string, situation: string, imageMarker?: string | null): InvestigationReport {
+  const fixtureText = getClientFixtureText(imageMarker);
+  const sourceText = (rawText || fixtureText || 'Suspicious message asks the recipient to verify account access through an unknown link.').trim();
+  const lower = sourceText.toLowerCase();
+  const redactedText = redactDemoText(sourceText);
+  const links = extractDemoLinks(sourceText);
+  const domain = links[0]?.domain || '';
+  const isDhl = lower.includes('dhl');
+  const isPaypal = lower.includes('paypal');
+  const isFedex = lower.includes('fedex');
+  const isPrize = lower.includes('prize') || lower.includes('rewards') || lower.includes('lottery');
+  const isQr = lower.includes('qr') || lower.includes('microsoft');
+  const brand = isDhl ? 'DHL' : isPaypal ? 'PAYPAL' : isFedex ? 'FEDEX' : isQr ? 'MICROSOFT' : isPrize ? 'GOOGLE' : 'UNKNOWN';
+  const paymentHook = /pay|fee|customs|invoice|bank|card|money|\$|payment/.test(lower);
+  const dataHook = /verify|confirm|login|password|account|identity|ssn|code|credential/.test(lower);
+  const urgencyHook = /now|urgent|within|minutes|avoid|blocked|limited|expires|immediate/.test(lower);
+
+  let score = 52;
+  if (domain) score += 18;
+  if (brand !== 'UNKNOWN') score += 16;
+  if (paymentHook) score += 12;
+  if (dataHook) score += 12;
+  if (urgencyHook) score += 8;
+  if (isDhl) score = 95;
+  if (isPaypal) score = Math.max(score, 74);
+  if (isFedex) score = Math.max(score, 86);
+  if (isPrize) score = Math.max(score, 82);
+  if (isQr) score = Math.max(score, 72);
+  score = Math.min(score, 96);
+
+  const verdict = score >= 70 ? 'High' : score >= 35 ? 'Medium' : 'Low';
+  const domainRisk = domain ? Math.min(100, score + (domain.includes('.xyz') || domain.includes('.live') || domain.includes('.net') ? 5 : 0)) : 0;
+  const breakdown = [
+    domain ? 'Unsafe destination link detected.' : 'No clickable URL extracted from visible text.',
+    brand !== 'UNKNOWN' ? 'Appears to impersonate a trusted company/institution.' : 'Sender identity cannot be verified from the message.',
+    paymentHook ? 'Asks for immediate payment, bank details, or delivery fees.' : dataHook ? 'Requests account or identity verification.' : 'Uses persuasion language that needs independent verification.',
+  ];
+  const indicators = [
+    ...(brand !== 'UNKNOWN' ? [{ category: 'Brand Impersonation', detail: `Claims to represent ${brand} while routing to an unverified destination.` }] : []),
+    ...(paymentHook ? [{ category: 'Financial Request', detail: 'Mentions a payment, fee, prize, or transfer pressure.' }] : []),
+    ...(dataHook ? [{ category: 'Data Collection Prompt', detail: 'Pushes the user toward account, identity, or credential confirmation.' }] : []),
+    ...(urgencyHook ? [{ category: 'Urgency Pressure', detail: 'Uses time pressure or account consequences to rush action.' }] : []),
+  ];
+  const safeSteps = getClientSafeSteps(situation);
+  const scoreTrace = [
+    ...(domain ? [{
+      label: 'Highest domain risk',
+      impact: domainRisk,
+      source: 'client_demo_domain_pattern',
+      severity: domainRisk >= 70 ? 'high' : 'medium',
+      evidence: `${domain}: unverified destination in a suspicious message.`,
+      calculation: 'demo domain pattern score',
+    }] : []),
+    ...(brand !== 'UNKNOWN' ? [{
+      label: 'Brand impersonation',
+      impact: 16,
+      source: 'client_demo_brand_signal',
+      severity: 'medium',
+      evidence: `Message claims to be from ${brand}.`,
+      calculation: 'matched trusted brand signal',
+    }] : []),
+    ...(paymentHook ? [{
+      label: 'Financial pressure',
+      impact: 12,
+      source: 'client_demo_social_signal',
+      severity: 'medium',
+      evidence: 'Payment, fee, prize, or transfer language detected.',
+      calculation: 'social engineering hook',
+    }] : []),
+    ...(dataHook ? [{
+      label: 'Data collection prompt',
+      impact: 12,
+      source: 'client_demo_privacy_signal',
+      severity: 'medium',
+      evidence: 'Message asks for verification, login, identity, or credential action.',
+      calculation: 'credential/data hook',
+    }] : []),
+  ].slice(0, 4);
+
+  const trace = [
+    { step: imageMarker ? 'Screenshot Fixture OCR' : 'PII Redaction', status: 'completed' as const, detail: imageMarker ? 'Loaded deterministic screenshot fixture text in browser demo mode.' : 'Redacted sensitive values locally for browser demo mode.' },
+    { step: 'Link Extraction', status: 'completed' as const, detail: domain ? `Found ${domain}.` : 'No URL extracted.' },
+    { step: 'Domain Inspection', status: 'completed' as const, detail: domain ? 'Applied browser demo domain-pattern scoring.' : 'Skipped domain scoring because no URL was present.' },
+    { step: 'Threat Intelligence Check', status: 'completed' as const, detail: 'Matched social-engineering demo signals.' },
+    { step: 'Risk Synthesis', status: 'completed' as const, detail: `Assigned ${verdict} risk (${score}/100).` },
+    { step: 'Safety Planner', status: 'completed' as const, detail: 'Generated contextual user-safe next steps.' },
+    { step: 'Gemma Analyst', status: 'completed' as const, detail: 'Backend unavailable; browser demo fallback explanation attached.' },
+    { step: 'Incident Report Generator', status: 'completed' as const, detail: 'Built a compact client-side demo case packet.' },
+  ];
+
+  const aiAnalysis: AiAnalysis = {
+    provider: 'browser-demo',
+    model: 'client-demo-fallback',
+    fallback_used: true,
+    status: 'fallback',
+    recommended_priority: score >= 70 ? 'urgent' : 'review',
+    executive_summary: `TrustLens classified this as ${verdict} risk (${score}/100) using browser demo evidence.`,
+    user_explanation: 'The live API is unavailable from this static build, so this sample is rendered with deterministic demo evidence. Configure a backend API for live Gemma enrichment.',
+    evidence: scoreTrace.slice(0, 3).map((item) => ({
+      signal: item.label,
+      why_it_matters: item.evidence,
+      severity: item.severity,
+    })),
+    questions: ['Did you enter credentials, payment details, or personal information?', 'Can you verify the request through the official app or typed website?'],
+    next_actions: safeSteps,
+    confidence_note: 'Client-side demo fallback; use the FastAPI backend for production analysis and OpenRouter Gemma output.',
+    fallback_reason: 'API unreachable or not configured for this browser session.',
+  };
+
+  const reportDraft = [
+    'TRUSTLENS CASE PACKET',
+    `Risk: ${verdict.toUpperCase()} (${score}/100)`,
+    `Target brand: ${brand}`,
+    `Signals: ${breakdown.join(', ')}`,
+    'Privacy: User identifiers redacted before analysis',
+    '',
+    'First safe move:',
+    safeSteps[0],
+    '',
+    'Anonymized suspicious content:',
+    redactedText,
+    '',
+    'Analyst route: Browser Demo Fallback',
+  ].join('\n');
+
+  return {
+    redacted_text: redactedText,
+    links,
+    domain_reports: domain ? [{
+      domain,
+      risk_score: domainRisk,
+      verdict: domainRisk >= 70 ? 'High' : domainRisk >= 35 ? 'Medium' : 'Low',
+      indicators: breakdown,
+      detected_brands: brand === 'UNKNOWN' ? [] : [brand.toLowerCase()],
+    }] : [],
+    social_engineering_indicators: indicators,
+    verdict,
+    risk_score: score,
+    confidence: imageMarker ? 92 : 90,
+    breakdown,
+    score_trace: scoreTrace,
+    safe_steps: safeSteps,
+    ai_analysis: aiAnalysis,
+    report_draft: reportDraft,
+    trace,
+    adk_framework_loaded: false,
+    extracted_text: imageMarker ? sourceText : null,
+  };
+}
+
+function getClientFixtureText(imageMarker?: string | null) {
+  const marker = (imageMarker || '').toUpperCase();
+  if (marker.includes('BANK')) {
+    return 'PayPal Security: Your account is temporarily limited. Confirm your identity at https://paypal-account-review.net/login within 30 minutes.';
+  }
+  if (marker.includes('LOTTERY')) {
+    return 'Google Rewards: Congratulations, you won a $50,000 prize. Submit your phone number and SSN at https://google-rewards-claim.com/secure.';
+  }
+  if (marker.includes('QR')) {
+    return 'Microsoft 365: Scan this QR code to keep mailbox access active. Confirm password at https://microsoft365-login-review.com.';
+  }
+  return '';
+}
+
+function extractDemoLinks(value: string) {
+  const urls = value.match(/https?:\/\/[^\s)]+/gi) || [];
+  return urls.map((original) => {
+    try {
+      return { original, domain: new URL(original).hostname.replace(/^www\./, '') };
+    } catch {
+      return { original, domain: original.replace(/^https?:\/\//, '').split('/')[0].replace(/^www\./, '') };
+    }
+  });
+}
+
+function redactDemoText(value: string) {
+  return value
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[REDACTED_EMAIL]')
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, '[REDACTED_PHONE]')
+    .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '[REDACTED_ID]');
+}
+
+function getClientSafeSteps(situation: string) {
+  if (situation === 'compromised') {
+    return [
+      'Change the affected password from the official website or app.',
+      'Enable MFA and revoke suspicious sessions.',
+      'Contact the official provider or bank support channel.',
+      'Save the message, transaction details, and timestamps for reporting.',
+    ];
+  }
+  if (situation === 'clicked_only') {
+    return [
+      'Close the page and do not enter any information.',
+      'Run a quick device/browser security check.',
+      'Change passwords only if you typed credentials.',
+      'Verify the request through the official app or typed website.',
+    ];
+  }
+  return [
+    'DO NOT click any link in the message.',
+    'Do not reply to the sender. Scammers often use replies to verify that a phone number or email is active.',
+    'Verify independently: use the official website or official app by typing the address yourself.',
+    'Report and delete: block the sender, mark it as spam, and remove the message.',
+  ];
 }
 
 function getSituationLabel(sit: string) {
