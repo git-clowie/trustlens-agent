@@ -484,7 +484,17 @@ export default function App() {
     <div className="app-container">
       {/* HEADER SECTION (Navbar) */}
       <header>
-        <div className="logo-section">
+        <div className="logo-section" onClick={() => {
+          setReport(null);
+          setInputText('');
+          setImageFile(null);
+          setImagePayload(null);
+          setMimeType(null);
+          setLoading(false);
+          setActiveTrace([]);
+          setShowHelp(false);
+          setShowProviderSettings(false);
+        }} style={{ cursor: 'pointer', userSelect: 'none' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 800, letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'uppercase' }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--accent-primary)', filter: 'drop-shadow(0 0 5px var(--accent-primary))' }}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" opacity="0.2" fill="currentColor"/>
@@ -916,39 +926,64 @@ export default function App() {
                 </div>
 
                 <div className="report-summary-grid">
-                  <div className="report-summary-item">
-                    <span>Risk</span>
-                    <strong style={{ color: getScoreColor(report.risk_score) }}>{report.verdict} / {report.risk_score}</strong>
+                  <div className="report-summary-item" style={{ borderLeft: `3px solid ${getScoreColor(report.risk_score)}` }}>
+                    <span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: getScoreColor(report.risk_score) }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                      Risk
+                    </span>
+                    <strong style={{ color: getScoreColor(report.risk_score), fontSize: '1.05rem' }}>{report.verdict} // {report.risk_score}</strong>
                   </div>
-                  <div className="report-summary-item">
-                    <span>Context</span>
+                  <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-secondary)' }}>
+                    <span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: 'var(--accent-secondary)' }}><circle cx="12" cy="12" r="10"/><path d="M22 12h-4M6 12H2M12 6V2M12 22v-4"/></svg>
+                      Context
+                    </span>
                     <strong>{getSituationLabel(reportSituation)}</strong>
                   </div>
-                  <div className="report-summary-item">
-                    <span>Primary Evidence</span>
+                  <div className="report-summary-item" style={{ borderLeft: '3px solid var(--accent-primary)' }}>
+                    <span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: 'var(--accent-primary)' }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      Primary Evidence
+                    </span>
                     <strong>{getPrimaryEvidence(report)}</strong>
                   </div>
-                  <div className="report-summary-item">
-                    <span>AI Analyst</span>
+                  <div className="report-summary-item" style={{ borderLeft: '3px solid var(--text-secondary)' }}>
+                    <span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px', verticalAlign: 'middle', color: 'var(--text-secondary)' }}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>
+                      AI Analyst
+                    </span>
                     <strong>{getAiRouteLabel(report.ai_analysis)}</strong>
                   </div>
                 </div>
 
                 <div className="report-chip-row">
                   {getTopScoreContributors(report).map((item, idx) => (
-                    <span key={`${item.label}-${idx}`} className="report-chip" style={{ borderColor: getTraceColor(item), color: getTraceColor(item) }}>
+                    <span key={`${item.label}-${idx}`} className="report-chip animate-pulse" style={{ borderColor: getTraceColor(item), color: getTraceColor(item), background: `${getTraceColor(item)}12` }}>
                       +{item.impact} {item.label}
                     </span>
                   ))}
                 </div>
 
                 <div className="report-action-card">
-                  <span>Next best action</span>
+                  <span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px', verticalAlign: 'middle' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    Next best action
+                  </span>
                   <strong>{report.safe_steps?.[0] || 'Use official channels before interacting.'}</strong>
                 </div>
 
-                <div className="redacted-view report-preview">
-                  {report.report_draft}
+                <div className="report-preview-container">
+                  <div className="report-preview-header">
+                    <div className="window-dots">
+                      <span className="dot dot-red"></span>
+                      <span className="dot dot-yellow"></span>
+                      <span className="dot dot-green"></span>
+                    </div>
+                    <span className="window-title">CASE_PACKET_SECURE_HASH.TXT</span>
+                  </div>
+                  <pre className="redacted-view report-preview">
+                    {report.report_draft}
+                  </pre>
                 </div>
               </div>
 
