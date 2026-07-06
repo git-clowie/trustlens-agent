@@ -62,13 +62,13 @@ The screenshot buttons use deterministic OCR markers so the demo behaves consist
 
 ## Capstone Concepts Demonstrated
 
-* **Google ADK:** visible coordinator agent definition and tool orchestration.
-* **MCP:** JSON-RPC stdin/stdout MCP server plus runnable proof script.
-* **Multimodal AI:** Gemini Vision OCR path for screenshots.
-* **Hosted LLM option:** OpenRouter Gemma 4 31B analyst layer, with local fallback.
-* **Guardrails:** local PII redaction, no link fetching, marked fallbacks.
-* **Deployability:** built `web/dist` bundle served by FastAPI, runtime `config.js` for static hosting, and optional Docker helper.
-* **UX:** Evidence Analytics, Score Trace, Provider Settings, Offline Demo Mode, Local Case History, compact Case Packet with print/PDF, and browser extension companion.
+*   **Google ADK**: Orchestrates core tools and steps via `TrustLensCoordinatorAgent` using the official `google-adk` framework.
+*   **Model Context Protocol (MCP)**: Implements standard JSON-RPC 2.0 stdin/stdout MCP server for external client integration.
+*   **Multimodal AI Integration**: Employs Gemini Vision for OCR decoding of suspicious screenshot attachments.
+*   **Hosted LLM Support**: Leverages OpenRouter API (Gemma model) with robust, tested local fallback capabilities.
+*   **Security & Guardrails**: Enforces local offline regex-based PII masking and zero-network domain inspection patterns.
+*   **Deployability**: Portably packages the frontend (`web/dist` bundle) served cleanly via the FastAPI backend or Docker.
+*   **UX Excellence**: Real-time explainable score traces, offline testing mock states, local storage case history, and secure admin controls.
 
 ## Verification
 
